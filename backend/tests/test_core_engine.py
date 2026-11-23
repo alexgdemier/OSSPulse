@@ -46,6 +46,13 @@ def test_api_health_and_invalid_repository_url(api_client):
     assert response.status_code == 400
 
 
+def test_analysis_api_rejects_invalid_urls_without_requesting_github(api_client):
+    response = api_client.post(
+        "/api/v1/analyze", json={"repository_url": "https://github.com.evil.test/owner/repo"}
+    )
+    assert response.status_code == 400
+
+
 def test_unknown_report_returns_not_found(api_client):
     response = api_client.get("/api/v1/reports/missing")
     assert response.status_code == 404
@@ -114,6 +121,45 @@ def test_report_is_persisted_in_normalized_tables(sqlite_sessions, api_client):
         api_client.get("/api/v1/repositories/owner/project/insights").json()[0]["priority_score"]
         == 50
     )
+
+
+def test_save_report_rolls_back_all_rows_on_database_failure(sqlite_sessions, monkeypatch):
+    from sqlalchemy.orm import Session
+
+    original_commit = Session.commit
+
+    def failing_commit(self):
+        raise RuntimeError("simulated commit failure")
+
+    monkeypatch.setattr(Session, "commit", failing_commit)
+    report = {
+        "report_id": "failed-report",
+        "status": "completed",
+        "analyzed_at": "2026-11-23T12:00:00+00:00",
+        "engine_version": "0.2.0-alpha",
+        "health_score": 70,
+        "coverage": 65,
+        "classification": "Healthy",
+        "repository": {
+            "id": 456,
+            "owner": "owner",
+            "name": "project",
+            "full_name": "owner/project",
+            "url": "https://github.com/owner/project",
+            "created_at": "2025-01-01T00:00:00+00:00",
+        },
+        "dimensions": {"maintenance": 70.0},
+        "data_completeness": {"issues": True},
+        "findings": [],
+        "insights": [],
+    }
+    with sqlite_sessions() as session, pytest.raises(RuntimeError):
+        save_report(session, report)
+
+    monkeypatch.setattr(Session, "commit", original_commit)
+    with sqlite_sessions() as session:
+        assert session.query(Repository).count() == 0
+        assert session.query(AnalysisReport).count() == 0
 
 
 def test_github_client_normalizes_snapshot_and_calls_central_api():

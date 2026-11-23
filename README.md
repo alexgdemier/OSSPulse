@@ -10,7 +10,7 @@ OSS Pulse is an independent project and is not officially affiliated with GitHub
 
 ## Project status
 
-Phase 1 is in progress. The CLI and `POST /api/v1/analyze` fetch public repository data and generate a JSON report. The web app submits repositories to the API and displays the report. Reports are stored in PostgreSQL and remain available after API restarts. A result with less than 50% data coverage is classified as `Insufficient Data`; dimensions without complete evidence are excluded from the weighted score.
+The core analysis and web report flows are implemented. The CLI and `POST /api/v1/analyze` fetch public repository data and generate a JSON report. The web app submits repositories to the API using a non-cacheable form submission and displays the saved report. Reports are stored in PostgreSQL and remain available after API restarts. Reports include bounded-paginated activity summaries, findings filters, and a public methodology page. A result with less than 50% data coverage is classified as `Insufficient Data`; dimensions without complete evidence are excluded from the weighted score. Community remains unscored until maintainer identity can be measured reliably.
 
 ## Stack
 

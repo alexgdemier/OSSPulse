@@ -8,6 +8,15 @@ from app.database.models import AnalysisReport, DimensionScore, Finding, Insight
 
 
 def save_report(session: Session, data: dict) -> None:
+    try:
+        _save_report(session, data)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+
+def _save_report(session: Session, data: dict) -> None:
     repository_data = data["repository"]
     repository = session.scalar(
         select(Repository).where(Repository.github_id == repository_data["id"])
@@ -84,7 +93,6 @@ def save_report(session: Session, data: dict) -> None:
         )
         if insight:
             session.add(Insight(finding_id=finding.id, priority_score=insight["priority_score"]))
-    session.commit()
 
 
 def get_report(session: Session, report_id: str) -> dict | None:

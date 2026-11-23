@@ -59,7 +59,11 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   }
   if (response.status === 404) notFound();
   if (!response.ok) return <main className="shell report-shell"><p className="error-banner">The report could not be loaded. Please try again.</p><Link href="/">← Back to OSS Pulse</Link></main>;
-  const report: Report = await response.json();
+  const payload: unknown = await response.json();
+  if (!isReport(payload)) {
+    return <main className="shell report-shell"><p className="error-banner">This report has an unsupported or incomplete format. Analyze the repository again to create a current report.</p><Link href="/">← Back to OSS Pulse</Link></main>;
+  }
+  const report = payload;
 
   const analyzed = new Date(report.analyzed_at).toLocaleString("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC", timeZoneName: "short" });
   return (
@@ -93,4 +97,18 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Analyzed {analyzed}</span><span>Coverage first · Unknown signals stay unknown</span></footer>
     </main>
   );
+}
+
+function isReport(value: unknown): value is Report {
+  if (!value || typeof value !== "object") return false;
+  const report = value as Partial<Report>;
+  return typeof report.report_id === "string"
+    && typeof report.analyzed_at === "string"
+    && typeof report.engine_version === "string"
+    && typeof report.classification === "string"
+    && typeof report.coverage === "number"
+    && Array.isArray(report.findings)
+    && Array.isArray(report.insights)
+    && Boolean(report.repository && typeof report.repository.full_name === "string")
+    && Boolean(report.dimensions && typeof report.dimensions === "object");
 }
