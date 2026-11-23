@@ -57,7 +57,7 @@ def test_report_is_persisted_in_normalized_tables(sqlite_sessions, api_client):
         "report_id": "report-123",
         "status": "completed",
         "analyzed_at": timestamp,
-        "engine_version": "0.1.0-alpha",
+        "engine_version": "0.2.0-alpha",
         "health_score": 82,
         "coverage": 100,
         "classification": "Healthy",
@@ -283,7 +283,7 @@ def test_scoring_does_not_turn_missing_data_into_zero():
     assert report["classification"] == "Insufficient Data"
 
 
-def test_open_unanswered_issue_produces_evidence():
+def test_open_issue_without_comments_produces_careful_finding():
     now = datetime.now(UTC)
     repository = GitHubRepository(
         id=1,
@@ -329,4 +329,129 @@ def test_open_unanswered_issue_produces_evidence():
     report = build_report(snapshot)
     finding = next(item for item in report["findings"] if item["code"] == "IS001")
     assert finding["evidence"]["number"] == 42
+    assert finding["title"] == "Open issue with no comments"
     assert finding["source_url"] == issue.html_url
+
+
+def test_complete_commit_windows_report_activity_decline():
+    now = datetime.now(UTC)
+    repository = GitHubRepository(
+        id=2,
+        full_name="owner/project",
+        name="project",
+        html_url="https://github.com/owner/project",
+        created_at=now - timedelta(days=500),
+        updated_at=now,
+        pushed_at=now - timedelta(days=10),
+        stargazers_count=0,
+        forks_count=0,
+        watchers_count=0,
+        open_issues_count=0,
+        default_branch="main",
+        owner={"login": "owner"},
+    )
+    commit_days = [10, 110, 120, 140, 170]
+    commits = [
+        GitHubCommit(
+            sha=f"commit-{days}",
+            html_url=f"https://github.com/owner/project/commit/{days}",
+            commit={
+                "author": {"date": (now - timedelta(days=days)).isoformat()},
+                "committer": {"date": (now - timedelta(days=days)).isoformat()},
+            },
+            author={"login": "maintainer" if days != 110 else "contributor"},
+        )
+        for days in commit_days
+    ]
+    snapshot = RepositorySnapshot(
+        repository=repository,
+        issues=[],
+        commits=commits,
+        releases=[
+            GitHubRelease(
+                tag_name="v1",
+                html_url="https://github.com/owner/project/releases/tag/v1",
+                published_at=now - timedelta(days=30),
+            )
+        ],
+        files=RepositoryFiles(
+            readme=True,
+            license=True,
+            contributing=True,
+            docs=True,
+            tests=True,
+            workflows=True,
+            development_config=True,
+        ),
+        fetched_at=now,
+        completeness={"issues": True, "commits": True, "releases": True, "repository_tree": True},
+    )
+
+    report = build_report(snapshot)
+    decline = next(item for item in report["findings"] if item["code"] == "SU001")
+    assert report["activity"]["commits_last_30_days"] == 1
+    assert report["activity"]["commits_last_90_days"] == 1
+    assert report["activity"]["commits_previous_90_days"] == 4
+    assert report["activity"]["commit_activity_change_percent"] == -75.0
+    assert report["activity"]["active_commit_authors_last_90_days"] == 1
+    assert decline["evidence"]["latest_90_days"] == 1
+
+
+def test_stale_pull_request_detection_skips_drafts_and_waiting_labels():
+    now = datetime.now(UTC)
+    repository = GitHubRepository(
+        id=3,
+        full_name="owner/repo",
+        name="repo",
+        html_url="https://github.com/owner/repo",
+        created_at=now - timedelta(days=100),
+        updated_at=now,
+        pushed_at=now,
+        stargazers_count=0,
+        forks_count=0,
+        watchers_count=0,
+        open_issues_count=0,
+        default_branch="main",
+        owner={"login": "owner"},
+    )
+    pull_requests = [
+        GitHubIssue(
+            number=number,
+            html_url=f"https://github.com/owner/repo/pull/{number}",
+            title="Old pull request",
+            state="open",
+            created_at=now - timedelta(days=90),
+            updated_at=now - timedelta(days=80),
+            pull_request={"url": "https://api.github.com/repos/owner/repo/pulls"},
+            draft=draft,
+            labels=[{"name": label}] if label else [],
+        )
+        for number, draft, label in [
+            (1, True, None),
+            (2, False, "blocked"),
+            (3, False, "waiting-for-author"),
+            (4, False, None),
+        ]
+    ]
+    snapshot = RepositorySnapshot(
+        repository=repository,
+        issues=pull_requests,
+        commits=[],
+        releases=[],
+        files=RepositoryFiles(
+            readme=True,
+            license=True,
+            contributing=True,
+            docs=True,
+            tests=True,
+            workflows=True,
+            development_config=True,
+        ),
+        fetched_at=now,
+        completeness={"issues": True, "commits": True, "releases": True, "repository_tree": True},
+    )
+
+    report = build_report(snapshot)
+    stale_findings = [item for item in report["findings"] if item["code"] == "PR002"]
+    assert len(stale_findings) == 1
+    assert stale_findings[0]["source_url"] == "https://github.com/owner/repo/pull/4"

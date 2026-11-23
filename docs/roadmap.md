@@ -12,7 +12,8 @@
 - [x] Web app connected to the API.
 - [x] PostgreSQL persistence and initial schema migration.
 - [x] Recent report list and repository report history endpoints.
-- [ ] Broader validation, robust activity trends, and maintainer response signals.
+- [x] Complete-window commit activity trends, descriptive activity summaries, and stale pull request exclusions for drafts and author-blocked work.
+- [ ] Broader validation and reliable maintainer response signals.
 
 ## Phase 2 — Web MVP (days 10–16)
 

@@ -3,7 +3,7 @@ from statistics import median
 from typing import Any
 from uuid import uuid4
 
-from app.schemas.github import RepositorySnapshot
+from app.schemas.github import GitHubIssue, RepositorySnapshot
 
 DIMENSION_WEIGHTS = {
     "maintenance": 30,
@@ -12,7 +12,19 @@ DIMENSION_WEIGHTS = {
     "documentation": 15,
     "sustainability": 10,
 }
-ENGINE_VERSION = "0.1.0-alpha"
+ENGINE_VERSION = "0.2.0-alpha"
+
+WAITING_OR_BLOCKED_LABELS = {
+    "blocked",
+    "waiting for author",
+    "waiting on author",
+    "awaiting author",
+    "needs author",
+    "waiting for maintainer",
+    "waiting on maintainer",
+    "awaiting maintainer",
+    "needs maintainer",
+}
 
 
 def _score_age(days: float, good: float, bad: float) -> float:
@@ -31,33 +43,48 @@ def _classify(score: int) -> str:
     return "Critical"
 
 
+def _is_waiting_or_blocked(pr: GitHubIssue) -> bool:
+    labels = {
+        str(label.get("name", "")).casefold().replace("-", " ").replace("_", " ").strip()
+        for label in pr.labels
+    }
+    return bool(labels & WAITING_OR_BLOCKED_LABELS) or any(
+        label.startswith(("waiting for ", "waiting on ", "awaiting ", "needs ")) for label in labels
+    )
+
+
 def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
     now = snapshot.fetched_at
     issues = [item for item in snapshot.issues if not item.is_pull_request]
     prs = [item for item in snapshot.issues if item.is_pull_request]
     open_issues = [item for item in issues if item.state == "open"]
     open_prs = [item for item in prs if item.state == "open" and not item.draft]
-    stale_prs = [item for item in open_prs if (now - item.updated_at).days >= 30]
-    very_stale_prs = [item for item in open_prs if (now - item.updated_at).days >= 60]
-    unanswered = [item for item in open_issues if item.comments == 0]
-    unanswered_14 = [item for item in unanswered if (now - item.created_at).days >= 14]
-    unanswered_30 = [item for item in unanswered if (now - item.created_at).days >= 30]
-
-    maintainers = {
-        snapshot.repository.owner.get("login", "").casefold(),
-        *(snapshot.repository.owner.get("collaborators", []) or []),
-    }
-    external_prs = [
-        item for item in prs if (item.user or {}).get("login", "").casefold() not in maintainers
+    reviewable_prs = [item for item in open_prs if not _is_waiting_or_blocked(item)]
+    stale_prs = [item for item in reviewable_prs if (now - item.updated_at).days >= 30]
+    very_stale_prs = [item for item in reviewable_prs if (now - item.updated_at).days >= 60]
+    issues_without_comments = [item for item in open_issues if item.comments == 0]
+    issues_without_comments_14 = [
+        item for item in issues_without_comments if (now - item.created_at).days >= 14
     ]
-    timestamps = [item.authored_at for item in snapshot.commits if item.authored_at]
-    timestamps += [item.updated_at for item in snapshot.issues]
-    recent_90 = [stamp for stamp in timestamps if now - timedelta(days=90) <= stamp <= now]
+    issues_without_comments_30 = [
+        item for item in issues_without_comments if (now - item.created_at).days >= 30
+    ]
+
+    commit_dates = [item.committed_at for item in snapshot.commits if item.committed_at]
+    recent_30 = [stamp for stamp in commit_dates if now - timedelta(days=30) <= stamp <= now]
+    recent_90 = [stamp for stamp in commit_dates if now - timedelta(days=90) <= stamp <= now]
     previous_90 = [
         stamp
-        for stamp in timestamps
+        for stamp in commit_dates
         if now - timedelta(days=180) <= stamp < now - timedelta(days=90)
     ]
+    active_authors_90 = {
+        item.author_login.casefold()
+        for item in snapshot.commits
+        if item.author_login
+        and item.committed_at
+        and now - timedelta(days=90) <= item.committed_at <= now
+    }
 
     dimensions: dict[str, float | None] = {
         "maintenance": None,
@@ -67,8 +94,8 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         "sustainability": None,
     }
     median_pr_age = (
-        median([(now - pr.updated_at).total_seconds() / 86400 for pr in open_prs])
-        if open_prs
+        median([(now - pr.updated_at).total_seconds() / 86400 for pr in reviewable_prs])
+        if reviewable_prs
         else 0
     )
     push_age = (
@@ -78,21 +105,14 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
     )
     maintenance_score = (
         0.45 * _score_age(median_pr_age, 7, 60)
-        + 0.25 * (100 * (1 - len(unanswered_30) / max(1, len(open_issues))))
+        + 0.25 * (100 * (1 - len(issues_without_comments_30) / max(1, len(open_issues))))
         + 0.30 * _score_age(push_age, 14, 180)
     )
     dimensions["maintenance"] = (
         round(maintenance_score, 1) if snapshot.completeness["issues"] else None
     )
-    dimensions["community"] = (
-        round(
-            0.5 * min(100, len({p.user.get("login") for p in external_prs if p.user}) * 20)
-            + 0.5 * (100 * len(external_prs) / len(prs)),
-            1,
-        )
-        if snapshot.completeness["issues"] and prs
-        else None
-    )
+    # Public PR and commit data cannot reliably distinguish maintainers from external contributors.
+    dimensions["community"] = None
 
     dev_checks = [snapshot.files.workflows, snapshot.files.tests, snapshot.files.development_config]
     dimensions["development"] = round(100 * sum(dev_checks) / len(dev_checks), 1)
@@ -106,9 +126,10 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
     dimensions["documentation"] = round(
         sum(weight for present, weight in zip(doc_checks, doc_weights) if present), 1
     )
+    activity_trend = None
     if snapshot.completeness["commits"]:
         activity = (
-            100
+            100.0
             if recent_90 and not previous_90
             else (
                 max(0.0, min(100.0, 100 * len(recent_90) / len(previous_90)))
@@ -116,6 +137,8 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
                 else None
             )
         )
+        if previous_90:
+            activity_trend = round(100 * (len(recent_90) - len(previous_90)) / len(previous_90), 1)
         release_score = (
             _score_age(
                 (now - snapshot.releases[0].published_at).total_seconds() / 86400,
@@ -208,11 +231,11 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
                 "Review the change and ask the author whether it is ready to proceed.",
                 pr.html_url,
             )
-    for issue in unanswered_30:
+    for issue in issues_without_comments_30:
         add(
             "IS002",
             "maintenance",
-            "Long unanswered issue",
+            "Open issue with no comments",
             f"No comments have been recorded for {(now - issue.created_at).days} days.",
             "high",
             {
@@ -223,12 +246,12 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "Acknowledge the report or request the details needed to triage it.",
             issue.html_url,
         )
-    for issue in unanswered_14:
-        if issue not in unanswered_30:
+    for issue in issues_without_comments_14:
+        if issue not in issues_without_comments_30:
             add(
                 "IS001",
                 "maintenance",
-                "Unanswered issue",
+                "Open issue with no comments",
                 f"No comments have been recorded for {(now - issue.created_at).days} days.",
                 "medium",
                 {
@@ -291,6 +314,25 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             snapshot.repository.html_url,
         )
     if (
+        snapshot.completeness["commits"]
+        and len(previous_90) >= 4
+        and len(recent_90) * 2 <= len(previous_90)
+    ):
+        add(
+            "SU001",
+            "sustainability",
+            "Commit activity has declined",
+            "Fewer than half as many commits were observed in the latest 90-day window.",
+            "medium",
+            {
+                "previous_90_days": len(previous_90),
+                "latest_90_days": len(recent_90),
+                "change_percent": activity_trend,
+            },
+            "Review recent project activity and consider communicating the maintenance plan.",
+            snapshot.repository.html_url,
+        )
+    if (
         snapshot.releases
         and snapshot.releases[0].published_at
         and (now - snapshot.releases[0].published_at).days >= 365
@@ -350,10 +392,19 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         "dimensions": dimensions,
         "data_completeness": snapshot.completeness,
         "activity": {
+            "commits_last_30_days": len(recent_30) if snapshot.completeness["commits"] else None,
+            "commits_last_90_days": len(recent_90) if snapshot.completeness["commits"] else None,
+            "commits_previous_90_days": len(previous_90)
+            if snapshot.completeness["commits"]
+            else None,
+            "commit_activity_change_percent": activity_trend,
+            "active_commit_authors_last_90_days": (
+                len(active_authors_90) if snapshot.completeness["commits"] else None
+            ),
             "open_issues": len(open_issues),
             "open_pull_requests": len(open_prs),
             "stale_pull_requests": len(stale_prs),
-            "unanswered_issues": len(unanswered),
+            "open_issues_with_no_comments": len(issues_without_comments),
         },
         "repository_files": snapshot.files.model_dump(),
         "findings": findings,

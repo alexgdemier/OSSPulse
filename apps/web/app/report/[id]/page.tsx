@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FindingsList } from "../../../components/findings-list";
 
 const apiBase = (process.env.OSSPULSE_API_URL ?? "http://127.0.0.1:8002/api/v1").replace(/\/$/, "");
 
@@ -25,6 +26,17 @@ type Report = {
   classification: string;
   repository: { full_name: string; url: string; description: string | null; language: string | null; stars: number; forks: number };
   dimensions: Record<string, number | null>;
+  activity?: {
+    commits_last_30_days?: number | null;
+    commits_last_90_days?: number | null;
+    commits_previous_90_days?: number | null;
+    commit_activity_change_percent?: number | null;
+    active_commit_authors_last_90_days?: number | null;
+    open_issues?: number;
+    open_pull_requests?: number;
+    stale_pull_requests?: number;
+    open_issues_with_no_comments?: number;
+  };
   findings: Finding[];
   insights: Insight[];
 };
@@ -63,9 +75,20 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{report.health_score ?? "—"}<small>/100</small></div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${report.health_score ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}</p></article>
         <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className="dimension" key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div><div className="bar"><i className={score !== null && score >= 70 ? "green" : "amber"} style={{ width: `${score ?? 0}%` }} /></div></div>)}</article>
       </section>
+      <section className="activity-summary" aria-label="Repository activity summary">
+        <div className="report-section-heading"><div><span className="section-label">OBSERVED ACTIVITY</span><h2>Recent repository signals</h2></div></div>
+        <div className="activity-cards">
+          <article><span>Commits · 30 days</span><strong>{report.activity?.commits_last_30_days ?? "—"}</strong></article>
+          <article><span>Commits · latest 90 days</span><strong>{report.activity?.commits_last_90_days ?? "—"}</strong></article>
+          <article><span>Active commit authors · 90 days</span><strong>{report.activity?.active_commit_authors_last_90_days ?? "—"}</strong></article>
+          <article><span>Open issues / pull requests</span><strong>{report.activity?.open_issues ?? "—"} / {report.activity?.open_pull_requests ?? "—"}</strong></article>
+        </div>
+        {typeof report.activity?.commit_activity_change_percent === "number" && <p className="method-note">Commit volume changed {report.activity.commit_activity_change_percent > 0 ? "+" : ""}{report.activity.commit_activity_change_percent}% compared with the previous 90-day window.</p>}
+        {report.activity && typeof report.activity.commits_last_90_days !== "number" && <p className="method-note">Commit totals are unavailable because GitHub pagination was incomplete.</p>}
+      </section>
       <section className="report-findings">
         <div className="report-section-heading"><div><span className="section-label">ACTIONABLE FINDINGS</span><h2>What needs attention</h2></div><span className="count">{report.insights.length}</span></div>
-        {report.insights.length === 0 ? <p className="empty-state">No findings were detected in the available data.</p> : report.insights.map((finding) => <article className="report-finding" key={`${finding.code}-${finding.source_url ?? finding.title}`}><span className={`finding-dot ${finding.severity === "critical" || finding.severity === "high" ? "high" : "medium"}`} /><div className="finding-content"><div className="finding-title"><span className="finding-code">{finding.code}</span><h3>{finding.title}</h3><span className={`severity severity-${finding.severity}`}>{finding.severity}</span><span className="priority-score">Priority {finding.priority_score}</span></div><p>{finding.description}</p><p className="recommendation"><b>Suggested action</b> · {finding.recommendation}</p><details><summary>View evidence</summary><pre>{JSON.stringify(finding.evidence, null, 2)}</pre></details></div>{finding.source_url && <a className="arrow" href={finding.source_url} target="_blank" rel="noreferrer" aria-label="Open source on GitHub">↗</a>}</article>)}
+        {report.insights.length === 0 ? <p className="empty-state">No findings were detected in the available data.</p> : <FindingsList insights={report.insights} />}
       </section>
       <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Analyzed {analyzed}</span><span>Coverage first · Unknown signals stay unknown</span></footer>
     </main>

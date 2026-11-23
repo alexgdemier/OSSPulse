@@ -57,8 +57,10 @@ class GitHubCommit(BaseModel):
     author: dict[str, Any] | None = None
 
     @property
-    def authored_at(self) -> datetime | None:
-        value = self.commit.get("author", {}).get("date")
+    def committed_at(self) -> datetime | None:
+        committer = self.commit.get("committer") or {}
+        author = self.commit.get("author") or {}
+        value = committer.get("date") or author.get("date")
         return datetime.fromisoformat(value.replace("Z", "+00:00")) if value else None
 
     @property
