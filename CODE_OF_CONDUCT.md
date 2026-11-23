@@ -1,7 +1,7 @@
-# Código de Conducta
+# Code of Conduct
 
-Queremos que participar en OSS Pulse sea una experiencia abierta y respetuosa, independientemente de la experiencia, identidad, origen o circunstancias de cada persona.
+We want participating in OSS Pulse to be a respectful and welcoming experience, regardless of a person's experience, identity, background, or circumstances.
 
-Se espera comunicación respetuosa, constructiva y centrada en el problema. No se toleran ataques personales, acoso, discriminación ni publicación de información privada sin consentimiento.
+Expected conduct includes respectful, constructive communication focused on the problem. Personal attacks, harassment, discrimination, and sharing private information without consent are not acceptable.
 
-Contacta en privado con los mantenedores del repositorio para informar de una conducta dañina. Revisarán el caso y podrán editar o retirar contenido, o limitar la participación.
+Contact the repository maintainers privately to report harmful behavior. They will review the report and may edit or remove content or limit participation.

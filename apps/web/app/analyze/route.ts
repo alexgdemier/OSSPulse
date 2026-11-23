@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const apiBase = (process.env.OSSPULSE_API_URL ?? "http://127.0.0.1:8000/api/v1").replace(/\/$/, "");
+const apiBase = (process.env.OSSPULSE_API_URL ?? "http://127.0.0.1:8002/api/v1").replace(/\/$/, "");
 
 export async function GET(request: NextRequest) {
   const repository = request.nextUrl.searchParams.get("repository") ?? "";

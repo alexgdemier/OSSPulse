@@ -1,38 +1,38 @@
-# Metodología de scoring
+# Scoring Methodology
 
-## Principio
+## Principle
 
-El Health Score resume señales observables; no certifica calidad ni mide popularidad. Cada informe incluye fecha, metodología, cobertura, dimensiones evaluables y evidencia. Lo desconocido es `not_evaluable`, nunca cero.
+The Health Score summarizes observable signals. It is not a quality certification or a popularity measure. Each report includes its timestamp, methodology version, coverage, evaluable dimensions, and evidence. Unknown signals are `not_evaluable`, never zero.
 
-## Pesos
+## Dimension weights
 
-| Dimensión | Peso |
+| Dimension | Weight |
 |---|---:|
-| Maintenance | 30 % |
-| Community | 25 % |
-| Development | 20 % |
-| Documentation | 15 % |
-| Sustainability | 10 % |
+| Maintenance | 30% |
+| Community | 25% |
+| Development | 20% |
+| Documentation | 15% |
+| Sustainability | 10% |
 
-Las dimensiones no calculables se omiten; pesos restantes se renormalizan para el score. `coverage` suma los pesos originales evaluables.
+Dimensions that cannot be calculated are omitted, and the remaining weights are renormalized for the weighted score. `coverage` is the sum of the original weights for evaluable dimensions.
 
-## Indicadores
+## Intended indicators
 
-- **Maintenance (30 %):** respuesta a PR (30 %), edad de PR abiertos (25 %), respuesta a issues (25 %), actividad de mantenimiento (20 %).
-- **Community (25 %):** contribuidores externos activos (30 %), diversidad (25 %), nuevos participantes (25 %), interacción de mantenedores (20 %). Evitar penalizar automáticamente proyectos pequeños.
-- **Development (20 %):** CI (25 %), tests detectables (30 %), configuración de desarrollo (20 %), workflows (25 %). Tests presentes no significa cobertura o éxito.
-- **Documentation (15 %):** README (30 %), licencia (25 %), CONTRIBUTING (25 %), documentación adicional (20 %).
-- **Sustainability (10 %):** concentración de contribuciones (40 %), tendencia de actividad (35 %), continuidad de releases (25 %). Interpretación conservadora.
+- **Maintenance (30%):** PR response time (30%), age of open PRs (25%), issue response time (25%), maintenance activity (20%).
+- **Community (25%):** active external contributors (30%), contribution diversity (25%), new participants (25%), maintainer interaction (20%). Avoid automatically penalizing small projects.
+- **Development (20%):** CI (25%), detectable tests (30%), development configuration (20%), workflows (25%). Test files do not prove test coverage or successful runs.
+- **Documentation (15%):** README (30%), license (25%), CONTRIBUTING (25%), additional documentation (20%).
+- **Sustainability (10%):** contribution concentration (40%), activity trend (35%), release continuity (25%). Interpret conservatively.
 
-## Detecciones iniciales
+## Initial detection rules
 
-`PR001` sin actividad ≥30 días; `PR002` ≥60; `IS001` issue sin respuesta ≥14 días; `IS002` ≥30; `CM001` concentración elevada; `DV001` sin CI detectable; `DV002` sin tests detectables; `DC001` sin CONTRIBUTING; `DC002` sin licencia; `SU001` caída significativa de actividad; `SU002` ausencia reciente de releases (informativo). Excluir drafts, bloqueos y espera del autor de PR stale cuando sea posible. Umbrales centralizados.
+`PR001`: no activity for at least 30 days; `PR002`: at least 60 days; `IS001`: issue with no comments for at least 14 days; `IS002`: at least 30 days; `CM001`: high contribution concentration; `DV001`: no detectable CI; `DV002`: no detectable tests; `DC001`: missing CONTRIBUTING; `DC002`: missing license; `SU001`: significant activity decline; `SU002`: no recent release (informational). Exclude draft PRs, blocked PRs, and PRs waiting on the author when the available data supports it. Thresholds are centralized.
 
-Todo hallazgo guarda código, categoría, severidad, explicación, evidencia fechada, recomendación y URL de origen. No declarar abandono por una señal aislada.
+Every finding stores a code, category, severity, explanation, dated evidence, recommendation, and source URL when available. Do not infer abandonment from a single signal.
 
-Prioridad interna: `P = 0.50 I + 0.30 U + 0.20 C`, impacto, urgencia y confianza entre 0 y 100. No es el Health Score.
+Recommendation priority is `P = 0.50 I + 0.30 U + 0.20 C`, where impact, urgency, and confidence range from 0 to 100. This is separate from the Health Score.
 
-| Score | Clasificación |
+| Score | Classification |
 |---:|---|
 | 85–100 | Excellent |
 | 70–84 | Healthy |
@@ -40,10 +40,8 @@ Prioridad interna: `P = 0.50 I + 0.30 U + 0.20 C`, impacto, urgencia y confianza
 | 30–49 | At Risk |
 | 0–29 | Critical |
 
-Bandas orientativas a calibrar. Los informes retienen versión del motor para mantener la interpretación histórica.
+These bands are provisional and need calibration across varied repositories. Reports retain the engine version so future methodology changes do not silently alter historical interpretation. A score with less than 50% coverage is classified as `Insufficient Data`; the weighted value is retained to show available signals, but is not presented as a reliable overall classification.
 
-Un score con menos de 50 % de cobertura se clasifica como `Insufficient Data`; se conserva el valor ponderado para mostrar las señales disponibles, pero no se presenta como una clasificación fiable del proyecto.
+## Signals in engine version 0.1.0-alpha
 
-## Señales en la primera versión del motor
-
-En `0.1.0-alpha`, Maintenance usa edad mediana de PR abiertos, issues abiertos sin comentarios y fecha del último push. Community necesita PRs observados para calcular diversidad/participación. Development y Documentation se limitan a presencia detectable en el árbol del branch por defecto. Sustainability necesita datos completos de commits y una release publicada con fecha. Si la paginación se limita o el árbol de GitHub está truncado, la dimensión correspondiente no se incluye en score ni cobertura. Estas señales iniciales aún no implementan todos los indicadores y pesos internos descritos arriba.
+Maintenance uses median age of observed open PRs, open issues with no comments, and time since the latest push. Community requires observed PRs to calculate account participation. Development and Documentation use detectable files in the default branch tree. Sustainability requires complete commit data and a dated published release. If pagination is capped or GitHub truncates the repository tree, affected dimensions are excluded from the score and coverage. These initial signals do not yet implement every intended indicator or internal weight listed above.

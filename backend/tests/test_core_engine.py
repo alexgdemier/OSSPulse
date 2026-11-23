@@ -4,10 +4,10 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import pytest
 from app.analyzers.scoring import build_report
-from app.api.v1 import router as api_router
 from app.cli import parse_repository_url
+from app.database.models import AnalysisReport, DimensionScore, Finding, Insight, Repository
+from app.database.repository import get_report, save_report
 from app.integrations.github import GitHubAPIError, GitHubClient
-from app.main import app
 from app.schemas.github import (
     GitHubCommit,
     GitHubIssue,
@@ -16,7 +16,6 @@ from app.schemas.github import (
     RepositoryFiles,
     RepositorySnapshot,
 )
-from fastapi.testclient import TestClient
 
 
 def test_repository_url_validation():
@@ -34,19 +33,69 @@ def test_repository_url_validation():
             parse_repository_url(invalid)
 
 
-def test_api_health_and_invalid_repository_url():
-    client = TestClient(app)
-    assert client.get("/api/v1/health").json() == {"status": "ok"}
-    response = client.post(
+def test_api_health_and_invalid_repository_url(api_client):
+    assert api_client.get("/api/v1/health").json() == {"status": "ok"}
+    response = api_client.post(
         "/api/v1/analyze", json={"repository_url": "https://example.com/owner/repo"}
     )
     assert response.status_code == 400
 
 
-def test_unknown_report_returns_not_found():
-    api_router._REPORTS.clear()
-    response = TestClient(app).get("/api/v1/reports/missing")
+def test_unknown_report_returns_not_found(api_client):
+    response = api_client.get("/api/v1/reports/missing")
     assert response.status_code == 404
+
+
+def test_report_is_persisted_in_normalized_tables(sqlite_sessions):
+    timestamp = "2026-11-23T12:00:00+00:00"
+    report = {
+        "report_id": "report-123",
+        "status": "completed",
+        "analyzed_at": timestamp,
+        "engine_version": "0.1.0-alpha",
+        "health_score": 82,
+        "coverage": 100,
+        "classification": "Healthy",
+        "repository": {
+            "id": 123,
+            "owner": "owner",
+            "name": "project",
+            "full_name": "owner/project",
+            "url": "https://github.com/owner/project",
+            "created_at": timestamp,
+        },
+        "dimensions": {"maintenance": 80.0, "community": None},
+        "data_completeness": {"issues": True},
+        "findings": [
+            {
+                "code": "DC001",
+                "category": "documentation",
+                "title": "Contributor guide missing",
+                "description": "No contributor guide was found.",
+                "severity": "low",
+                "evidence": {"checked": "CONTRIBUTING*"},
+                "recommendation": "Add a contributor guide.",
+                "source_url": None,
+                "detected_at": timestamp,
+            }
+        ],
+        "insights": [
+            {
+                "code": "DC001",
+                "title": "Contributor guide missing",
+                "source_url": None,
+                "priority_score": 50,
+            }
+        ],
+    }
+    with sqlite_sessions() as session:
+        save_report(session, report)
+        assert get_report(session, "report-123") == report
+        assert session.query(Repository).count() == 1
+        assert session.query(AnalysisReport).count() == 1
+        assert session.query(DimensionScore).count() == 2
+        assert session.query(Finding).count() == 1
+        assert session.query(Insight).count() == 1
 
 
 def test_github_client_normalizes_snapshot_and_calls_central_api():

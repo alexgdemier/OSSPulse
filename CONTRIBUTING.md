@@ -1,17 +1,19 @@
-# Contribuir a OSS Pulse
+# Contributing to OSS Pulse
 
-Gracias por tu interés. En esta fase, abre primero un issue para cambios de metodología, alcance o arquitectura.
+Thanks for helping improve OSS Pulse. Please open an issue before proposing changes to the scoring methodology, product scope, or architecture.
 
-## Entorno
+## Set up your environment
 
-Backend: Python 3.11+, `python -m pip install -e ".[dev]"`. Web: Node.js 20.9+, ejecutar `npm install` en `apps/web`. Copia `.env.example` a `.env` solo para configuración local.
+- Backend: Python 3.11+, then `python -m pip install -e ".[dev]"`.
+- Database: copy `.env.example` to `.env`, then run `docker compose up -d postgres` and `python -m alembic upgrade head`.
+- Web: Node.js 20.9+; run `npm ci` from `apps/web`.
 
-## Cambios
+## Pull request workflow
 
-1. Crea una rama breve desde `main`.
-2. Mantén cada cambio enfocado y explica reglas o métricas nuevas.
-3. Incluye evidencia, limitaciones y documentación para hallazgos nuevos.
-4. Ejecuta las comprobaciones pertinentes antes de abrir un PR.
-5. Describe problema, solución e impacto visible.
+1. Create a focused branch from `main`.
+2. Keep each change small and explain any new metric or rule.
+3. Include evidence, limitations, and documentation for new findings.
+4. Run the relevant checks before opening a pull request.
+5. Describe the problem, the change, and its user-visible impact.
 
-No incluyas tokens ni datos privados. No interpretes una señal no disponible como negativa. Las pruebas del núcleo deben poder ejecutarse sin conexión a GitHub.
+Never include tokens or private data. Do not treat unavailable signals as negative results. Core analysis checks should run without connecting to GitHub.

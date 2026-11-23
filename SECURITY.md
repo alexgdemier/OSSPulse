@@ -1,5 +1,5 @@
-# Seguridad
+# Security Policy
 
-No publiques vulnerabilidades explotables en issues públicos. Hasta que se configure un canal privado específico, contacta directamente con los mantenedores a través de GitHub. Incluye pasos para reproducir, impacto y posible mitigación.
+Do not report exploitable vulnerabilities in public issues. Until a dedicated private reporting channel is configured, contact the repository maintainers directly through GitHub. Include reproduction steps, impact, and a possible mitigation.
 
-OSS Pulse no debe ejecutar código del repositorio analizado. No compartas tokens en issues, logs ni informes.
+OSS Pulse must not execute code from analyzed repositories. Never share tokens in issues, logs, or reports.

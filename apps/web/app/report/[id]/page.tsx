@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-const apiBase = (process.env.OSSPULSE_API_URL ?? "http://127.0.0.1:8000/api/v1").replace(/\/$/, "");
+const apiBase = (process.env.OSSPULSE_API_URL ?? "http://127.0.0.1:8002/api/v1").replace(/\/$/, "");
 
 type Finding = {
   code: string;
@@ -37,15 +37,15 @@ const labels: Record<string, string> = {
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  let report: Report;
+  let response: Response;
   try {
-    const response = await fetch(`${apiBase}/reports/${encodeURIComponent(id)}`, { cache: "no-store" });
-    if (response.status === 404) notFound();
-    if (!response.ok) throw new Error("Report request failed");
-    report = await response.json();
+    response = await fetch(`${apiBase}/reports/${encodeURIComponent(id)}`, { cache: "no-store" });
   } catch {
-    return <main className="shell report-shell"><p className="error-banner">This report is temporarily unavailable. The API keeps reports in memory until database storage is added.</p><Link href="/">← Back to OSS Pulse</Link></main>;
+    return <main className="shell report-shell"><p className="error-banner">The report service is unavailable. Start or check the OSS Pulse API and try again.</p><Link href="/">← Back to OSS Pulse</Link></main>;
   }
+  if (response.status === 404) notFound();
+  if (!response.ok) return <main className="shell report-shell"><p className="error-banner">The report could not be loaded. Please try again.</p><Link href="/">← Back to OSS Pulse</Link></main>;
+  const report: Report = await response.json();
 
   const analyzed = new Date(report.analyzed_at).toLocaleString("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC", timeZoneName: "short" });
   return (

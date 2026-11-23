@@ -1,27 +1,30 @@
 # Roadmap
 
-## Fase 0 — Preparación (días 1–2)
+## Phase 0 — Product definition (days 1–2)
 
-- [x] Especificación, estructura y repositorio local.
-- [x] Bases Python/FastAPI, Next.js, PostgreSQL y contribución.
-- [x] Contrato inicial de informe y modelos normalizados.
+- [x] Specification, project structure, and GitHub repository.
+- [x] Python/FastAPI, Next.js, PostgreSQL, and contribution foundations.
+- [x] Initial report contract and normalized models.
 
-## Fase 1 — Core Engine (días 3–9)
+## Phase 1 — Core engine (days 3–9)
 
-Cliente GitHub, normalización, paginación acotada, CLI con JSON, analizadores iniciales, scoring, detecciones y web conectada al API. Criterio: informe real con evidencia y cobertura. Pendiente: validación más amplia, tendencias robustas, respuestas de mantenedores y persistencia PostgreSQL.
+- [x] GitHub client, normalized data, bounded pagination, JSON CLI, initial analyzers, scoring, and findings.
+- [x] Web app connected to the API.
+- [x] PostgreSQL persistence and initial schema migration.
+- [ ] Broader validation, robust activity trends, and maintainer response signals.
 
-## Fase 2 — Web MVP (días 10–16)
+## Phase 2 — Web MVP (days 10–16)
 
-Landing, análisis, informe, dimensiones, hallazgos, recomendaciones y metodología pública.
+Landing page, repository analysis, report overview, findings, recommendations, and a public methodology page.
 
-## Fase 3 — Fiabilidad y lanzamiento (días 17–23)
+## Phase 3 — Reliability and launch (days 17–23)
 
-Validar repositorios diversos, corregir errores, persistencia PostgreSQL, documentación, CI y despliegue. Primera versión `v0.1.0`.
+Validate across varied repositories, fix false positives, expand checks, document deployment, and ship the first `v0.1.0` release.
 
-## Fase 4 — Adopción (días 24–30)
+## Phase 4 — Adoption (days 24–30)
 
-Feedback real, mejoras guiadas por uso y contribuciones; sin inflar métricas.
+Gather real user feedback and contributions; report adoption honestly.
 
-## Después
+## After the MVP
 
-Snapshots; GitHub OAuth/App; monitorización; GitHub Action; multi-repositorio; GitLab; asistencia de IA solo con valor verificable.
+Historical snapshots, GitHub OAuth/App, monitoring, GitHub Action, multi-repository dashboard, GitLab support, and AI-assisted insights only when they provide verifiable value.
