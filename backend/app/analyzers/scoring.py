@@ -181,9 +181,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
                 else 0.0
             )
         dimensions["sustainability"] = (
-            round(0.65 * activity + 0.35 * release_score, 1)
-            if release_score is not None
-            else None
+            round(0.65 * activity + 0.35 * release_score, 1) if release_score is not None else None
         )
 
     evaluable = {
