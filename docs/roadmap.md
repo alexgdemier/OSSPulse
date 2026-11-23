@@ -15,6 +15,7 @@
 - [x] Complete-window commit activity trends, descriptive activity summaries, and stale pull request exclusions for drafts and author-blocked work.
 - [ ] Broader validation across small, large, active, and archived repositories.
 - [ ] Reliable maintainer response signals; public issue data currently cannot establish whether an issue was seen by a maintainer.
+- [x] Suppress file-absence findings when GitHub truncates the repository tree and require complete release pagination for missing-release findings.
 
 ## Phase 2 — Web MVP (days 10–16)
 

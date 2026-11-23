@@ -32,11 +32,12 @@ type Report = {
     commits_previous_90_days?: number | null;
     commit_activity_change_percent?: number | null;
     active_commit_authors_last_90_days?: number | null;
-    open_issues?: number;
-    open_pull_requests?: number;
-    stale_pull_requests?: number;
-    open_issues_with_no_comments?: number;
+    open_issues?: number | null;
+    open_pull_requests?: number | null;
+    stale_pull_requests?: number | null;
+    open_issues_with_no_comments?: number | null;
   };
+  data_completeness?: Record<string, boolean>;
   findings: Finding[];
   insights: Insight[];
 };
@@ -89,6 +90,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
         {typeof report.activity?.commit_activity_change_percent === "number" && <p className="method-note">Commit volume changed {report.activity.commit_activity_change_percent > 0 ? "+" : ""}{report.activity.commit_activity_change_percent}% compared with the previous 90-day window.</p>}
         {report.activity && typeof report.activity.commits_last_90_days !== "number" && <p className="method-note">Commit totals are unavailable because GitHub pagination was incomplete.</p>}
+        {report.data_completeness?.issues === false && <p className="method-note">Issue and pull request totals are unavailable because GitHub pagination was incomplete.</p>}
       </section>
       <section className="report-findings">
         <div className="report-section-heading"><div><span className="section-label">ACTIONABLE FINDINGS</span><h2>What needs attention</h2></div><span className="count">{report.insights.length}</span></div>

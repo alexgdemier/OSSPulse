@@ -115,7 +115,11 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
     dimensions["community"] = None
 
     dev_checks = [snapshot.files.workflows, snapshot.files.tests, snapshot.files.development_config]
-    dimensions["development"] = round(100 * sum(dev_checks) / len(dev_checks), 1)
+    dimensions["development"] = (
+        round(100 * sum(dev_checks) / len(dev_checks), 1)
+        if snapshot.completeness["repository_tree"]
+        else None
+    )
     doc_checks = [
         snapshot.files.readme,
         snapshot.files.license,
@@ -123,9 +127,17 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         snapshot.files.docs,
     ]
     doc_weights = [30, 25, 25, 20]
-    dimensions["documentation"] = round(
-        sum(weight for present, weight in zip(doc_checks, doc_weights) if present), 1
+    dimensions["documentation"] = (
+        round(sum(weight for present, weight in zip(doc_checks, doc_weights) if present), 1)
+        if snapshot.completeness["repository_tree"]
+        else None
     )
+    dated_releases = [
+        release
+        for release in snapshot.releases
+        if not release.draft and release.published_at is not None
+    ]
+    latest_release = max(dated_releases, key=lambda release: release.published_at, default=None)
     activity_trend = None
     if snapshot.completeness["commits"]:
         activity = (
@@ -141,11 +153,11 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             activity_trend = round(100 * (len(recent_90) - len(previous_90)) / len(previous_90), 1)
         release_score = (
             _score_age(
-                (now - snapshot.releases[0].published_at).total_seconds() / 86400,
+                (now - latest_release.published_at).total_seconds() / 86400,
                 180,
                 730,
             )
-            if snapshot.releases and snapshot.releases[0].published_at
+            if latest_release
             else None
         )
         dimensions["sustainability"] = (
@@ -262,7 +274,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
                 "Acknowledge the issue and clarify next steps.",
                 issue.html_url,
             )
-    if not snapshot.files.workflows:
+    if snapshot.completeness["repository_tree"] and not snapshot.files.workflows:
         add(
             "DV001",
             "development",
@@ -272,7 +284,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             {"checked": ".github/workflows/"},
             "Add a CI workflow for the project's supported environments.",
         )
-    if not snapshot.files.tests:
+    if snapshot.completeness["repository_tree"] and not snapshot.files.tests:
         add(
             "DV002",
             "development",
@@ -282,7 +294,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             {"checked": ["tests/", "test/", "spec/", ".github/workflows/"]},
             "Add automated tests for key behavior and run them in CI.",
         )
-    if not snapshot.files.contributing:
+    if snapshot.completeness["repository_tree"] and not snapshot.files.contributing:
         add(
             "DC001",
             "documentation",
@@ -292,7 +304,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             {"checked": "CONTRIBUTING*"},
             "Document how contributors can set up, test, and submit changes.",
         )
-    if not snapshot.files.license:
+    if snapshot.completeness["repository_tree"] and not snapshot.files.license:
         add(
             "DC002",
             "documentation",
@@ -333,11 +345,11 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             snapshot.repository.html_url,
         )
     if (
-        snapshot.releases
-        and snapshot.releases[0].published_at
-        and (now - snapshot.releases[0].published_at).days >= 365
+        snapshot.completeness["releases"]
+        and latest_release
+        and (now - latest_release.published_at).days >= 365
     ):
-        release_age = (now - snapshot.releases[0].published_at).days
+        release_age = (now - latest_release.published_at).days
         add(
             "SU002",
             "sustainability",
@@ -345,11 +357,11 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             f"The latest published release is {release_age} days old.",
             "informational",
             {
-                "tag": snapshot.releases[0].tag_name,
-                "published_at": snapshot.releases[0].published_at.isoformat(),
+                "tag": latest_release.tag_name,
+                "published_at": latest_release.published_at.isoformat(),
             },
             "Review release cadence in the context of the project's scope and stability.",
-            snapshot.releases[0].html_url,
+            latest_release.html_url,
         )
 
     priorities = {"critical": 100, "high": 75, "medium": 50, "low": 25, "informational": 10}
@@ -401,10 +413,12 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "active_commit_authors_last_90_days": (
                 len(active_authors_90) if snapshot.completeness["commits"] else None
             ),
-            "open_issues": len(open_issues),
-            "open_pull_requests": len(open_prs),
-            "stale_pull_requests": len(stale_prs),
-            "open_issues_with_no_comments": len(issues_without_comments),
+            "open_issues": len(open_issues) if snapshot.completeness["issues"] else None,
+            "open_pull_requests": len(open_prs) if snapshot.completeness["issues"] else None,
+            "stale_pull_requests": len(stale_prs) if snapshot.completeness["issues"] else None,
+            "open_issues_with_no_comments": (
+                len(issues_without_comments) if snapshot.completeness["issues"] else None
+            ),
         },
         "repository_files": snapshot.files.model_dump(),
         "findings": findings,

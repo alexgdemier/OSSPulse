@@ -501,3 +501,104 @@ def test_stale_pull_request_detection_skips_drafts_and_waiting_labels():
     stale_findings = [item for item in report["findings"] if item["code"] == "PR002"]
     assert len(stale_findings) == 1
     assert stale_findings[0]["source_url"] == "https://github.com/owner/repo/pull/4"
+
+
+def test_incomplete_repository_tree_does_not_score_or_emit_missing_file_findings():
+    now = datetime.now(UTC)
+    repository = GitHubRepository(
+        id=4,
+        full_name="owner/truncated",
+        name="truncated",
+        html_url="https://github.com/owner/truncated",
+        created_at=now - timedelta(days=100),
+        updated_at=now,
+        pushed_at=now,
+        stargazers_count=0,
+        forks_count=0,
+        watchers_count=0,
+        open_issues_count=0,
+        default_branch="main",
+        owner={"login": "owner"},
+    )
+    snapshot = RepositorySnapshot(
+        repository=repository,
+        issues=[],
+        commits=[],
+        releases=[],
+        files=RepositoryFiles(
+            readme=False,
+            license=False,
+            contributing=False,
+            docs=False,
+            tests=False,
+            workflows=False,
+            development_config=False,
+        ),
+        fetched_at=now,
+        completeness={"issues": False, "commits": True, "releases": True, "repository_tree": False},
+    )
+
+    report = build_report(snapshot)
+
+    assert report["dimensions"]["development"] is None
+    assert report["dimensions"]["documentation"] is None
+    assert report["activity"]["open_issues"] is None
+    assert report["activity"]["open_pull_requests"] is None
+    assert not {"DV001", "DV002", "DC001", "DC002"} & {
+        finding["code"] for finding in report["findings"]
+    }
+
+
+def test_release_checks_use_latest_published_date_and_require_complete_pagination():
+    now = datetime.now(UTC)
+    repository = GitHubRepository(
+        id=5,
+        full_name="owner/releases",
+        name="releases",
+        html_url="https://github.com/owner/releases",
+        created_at=now - timedelta(days=500),
+        updated_at=now,
+        pushed_at=now,
+        stargazers_count=0,
+        forks_count=0,
+        watchers_count=0,
+        open_issues_count=0,
+        default_branch="main",
+        owner={"login": "owner"},
+    )
+    releases = [
+        GitHubRelease(
+            tag_name="old",
+            html_url="https://github.com/owner/releases/releases/tag/old",
+            published_at=now - timedelta(days=400),
+        ),
+        GitHubRelease(
+            tag_name="recent",
+            html_url="https://github.com/owner/releases/releases/tag/recent",
+            published_at=now - timedelta(days=20),
+        ),
+    ]
+    snapshot = RepositorySnapshot(
+        repository=repository,
+        issues=[],
+        commits=[],
+        releases=releases,
+        files=RepositoryFiles(
+            readme=True,
+            license=True,
+            contributing=True,
+            docs=True,
+            tests=True,
+            workflows=True,
+            development_config=True,
+        ),
+        fetched_at=now,
+        completeness={"issues": True, "commits": True, "releases": True, "repository_tree": True},
+    )
+    report = build_report(snapshot)
+    assert not any(finding["code"] == "SU002" for finding in report["findings"])
+
+    snapshot.completeness["releases"] = False
+    snapshot.releases = [releases[0]]
+    incomplete_report = build_report(snapshot)
+    assert not any(finding["code"] == "SU002" for finding in incomplete_report["findings"])
