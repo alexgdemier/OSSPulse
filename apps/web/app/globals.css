@@ -30,6 +30,7 @@ footer { display:flex; align-items:center; justify-content:space-between; gap:18
 @media(max-width:480px) { .shell { padding:0 14px; } .nav { height:66px; } .nav-links { gap:14px; font-size:10px; } .hero { padding:58px 0 44px; } .eyebrow { font-size:8px; } .lead { font-size:13px; } .search { flex-wrap:wrap; gap:7px; } .github-mark { width:24px; } .search input { font-size:11px; } .search button { width:100%; } .preview-top,.preview-foot { padding:13px; } .updated { font-size:7px; text-align:right; } .preview-body { padding:19px 15px; gap:17px; } .score strong { font-size:52px; } .value h2 { font-size:27px; } footer { align-items:flex-start; flex-direction:column; gap:9px; } }
 
 .error-banner { max-width:660px; margin:0 auto 18px; padding:13px 16px; border:1px solid #62433a; border-radius:7px; background:#241714; color:#f1b2a2; font-size:12px; line-height:1.55; text-align:left; }
+.cache-note { margin:24px 0 -32px; padding:12px 15px; border:1px solid #384b41; border-radius:7px; background:#18221c; color:#b9d8c5; font-size:12px; line-height:1.55; }
 .report-shell .nav { margin-bottom:0; }
 .report-heading { padding:56px 0 32px; }
 .report-heading .eyebrow { font-size:9px; }

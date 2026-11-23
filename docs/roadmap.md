@@ -23,6 +23,7 @@
 - [ ] Reliable maintainer response signals; public issue data currently cannot establish whether an issue was seen by a maintainer.
 - [x] Suppress file-absence findings when GitHub truncates the repository tree and require complete release pagination for missing-release findings.
 - [x] Match root-only files at the repository root and recognize nested documentation and test directories in monorepos.
+- [x] Add shared analysis quotas, recent-report caching, and bounded report retention for public traffic.
 
 ## Phase 2 — Web MVP (days 10–16)
 
