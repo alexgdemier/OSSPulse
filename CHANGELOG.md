@@ -4,6 +4,12 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Scoring reliability
+
+- Treat complete evidence of no commit activity as zero activity instead of unevaluated data.
+- Treat complete release history with no published releases as zero release continuity and explain it with an informational finding.
+- Increment the scoring engine version to `0.2.1-alpha`; saved reports retain the score and version they were created with.
+
 ### Release readiness
 
 - Added database-backed API readiness checks and verified PostgreSQL TLS configuration.
