@@ -14,9 +14,9 @@ Base path: `/api/v1`. Analysis, report retrieval, repository history, findings, 
 | GET | `/repositories/{owner}/{repo}/findings` | Findings from the latest report |
 | GET | `/repositories/{owner}/{repo}/insights` | Recommendations from the latest report |
 
-`POST /analyze` accepts `{ "repository_url": "https://github.com/owner/repo" }` and returns the complete JSON report. It does not require authentication for public repositories. Reports are persisted in PostgreSQL and can be retrieved by ID after service restarts. If coverage is below 50%, classification is `Insufficient Data`.
+`POST /analyze` accepts `{ "repository_url": "https://github.com/owner/repo" }` and returns the complete JSON report. It does not require authentication for public repositories. Reports are persisted in PostgreSQL and can be retrieved by ID after service restarts. If coverage is below 75%, classification is `Insufficient Data`. The threshold requires complete evidence for all four currently scoreable dimensions; Community remains unevaluated.
 
-`health_score` remains the weighted value of evaluable dimensions for API consumers, even below 50% coverage. In that case it is diagnostic only: the web report and report history hide the total and show `Insufficient Data` so a partial score is not mistaken for a reliable rating.
+`health_score` remains the weighted value of evaluable dimensions for API consumers, even below 75% coverage. In that case it is diagnostic only: the web report and report history hide the total and show `Insufficient Data` so a partial score is not mistaken for a reliable rating.
 
 Finding arrays contain one record per detected item. The web report visually groups repeated stale-issue and stale-pull-request signals; expanding a group exposes each finding and its source link without changing API output.
 

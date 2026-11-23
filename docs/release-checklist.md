@@ -17,7 +17,7 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 
 ## Current release status
 
-The project is at `0.2.0-alpha`. Initial point-in-time validation covers six public repositories across small, active, large, quiet, archived, and forked cases; broad false-positive review, score calibration, and a production-like staging deployment still require completion. Do not describe the scoring as stable until those checks have been completed and documented.
+The project is at `0.3.0-alpha`. Point-in-time validation now covers nine public repositories across small, active, large, quiet, archived, and forked cases. The score classification threshold was raised to require full coverage of the four currently scoreable dimensions after an active project produced a diagnostic score of 98 with only 65% coverage. Broad false-positive review, wider score calibration, and a production-like staging deployment still require completion. Do not describe the scoring as stable until those checks have been completed and documented.
 
 ## Tooling follow-up
 

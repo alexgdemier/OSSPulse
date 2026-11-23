@@ -4,6 +4,12 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Scoring coverage and versioning
+
+- Require 75% coverage before assigning a Health Score classification; this corresponds to complete data for every currently scoreable dimension while Community remains unscored.
+- Keep weighted scores below the threshold as API diagnostics and withhold them in the web report and history.
+- Increment the API, web, and scoring engine versions to `0.3.0-alpha` so cached analyses use the revised methodology.
+
 ### Maintainer response evidence
 
 - Add a bounded sample of issue replies that GitHub associates with an owner, organization member, or collaborator.
