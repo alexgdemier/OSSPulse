@@ -6,7 +6,7 @@ Thanks for helping improve OSS Pulse. Please open an issue before proposing chan
 
 - Backend: Python 3.11+, then `python -m pip install -e ".[dev]"`.
 - Database: copy `.env.example` to `.env`, then run `docker compose up -d postgres` and `python -m alembic upgrade head`.
-- Web: Node.js 20.9+; run `npm ci` from `apps/web`.
+- Web: Node.js 24+; run `npm ci` from `apps/web`.
 
 ## Pull request workflow
 

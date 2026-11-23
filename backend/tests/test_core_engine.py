@@ -12,6 +12,7 @@ from app.database.repository import (
     list_recent_reports,
     save_report,
 )
+from app.database.session import database_connect_args
 from app.integrations.github import GitHubAPIError, GitHubClient
 from app.schemas.github import (
     GitHubCommit,
@@ -40,10 +41,31 @@ def test_repository_url_validation():
 
 def test_api_health_and_invalid_repository_url(api_client):
     assert api_client.get("/api/v1/health").json() == {"status": "ok"}
+    assert api_client.get("/api/v1/ready").json() == {"status": "ready"}
     response = api_client.post(
         "/api/v1/analyze", json={"repository_url": "https://example.com/owner/repo"}
     )
     assert response.status_code == 400
+
+
+def test_readiness_returns_service_unavailable_when_database_fails(api_client, monkeypatch):
+    from sqlalchemy.exc import SQLAlchemyError
+    from sqlalchemy.orm import Session
+
+    def fail_query(self, statement, *args, **kwargs):
+        raise SQLAlchemyError("simulated database outage")
+
+    monkeypatch.setattr(Session, "execute", fail_query)
+    response = api_client.get("/api/v1/ready")
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Database is unavailable"
+
+
+def test_database_ssl_uses_certificate_and_hostname_verification(monkeypatch):
+    monkeypatch.setattr("app.database.session.settings.database_ssl", True)
+    ssl_context = database_connect_args()["ssl_context"]
+    assert ssl_context.check_hostname is True
+    assert ssl_context.verify_mode.name == "CERT_REQUIRED"
 
 
 def test_analysis_api_rejects_invalid_urls_without_requesting_github(api_client):
@@ -204,6 +226,11 @@ def test_github_client_normalizes_snapshot_and_calls_central_api():
     assert snapshot.files.readme is True
     assert snapshot.completeness["issues"] is True
     assert all(request.url.host == "api.github.com" for request in calls)
+    issue_request = next(request for request in calls if request.url.path.endswith("/issues"))
+    commit_request = next(request for request in calls if request.url.path.endswith("/commits"))
+    assert issue_request.url.params["state"] == "open"
+    assert "since" in commit_request.url.params
+    assert "until" in commit_request.url.params
 
 
 def test_github_client_marks_bounded_pagination_incomplete(monkeypatch):

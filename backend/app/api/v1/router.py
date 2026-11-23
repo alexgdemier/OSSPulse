@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, Query
 from httpx import HTTPError
 from pydantic import BaseModel, HttpUrl
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -39,6 +40,15 @@ def _load_repository_history(
 @router.get("/health", tags=["service"])
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@router.get("/ready", tags=["service"])
+def ready(session: Session = Depends(get_db)) -> dict[str, str]:
+    try:
+        session.execute(text("SELECT 1"))
+    except SQLAlchemyError as exc:
+        raise HTTPException(status_code=503, detail="Database is unavailable") from exc
+    return {"status": "ready"}
 
 
 @router.post("/analyze", tags=["analysis"])

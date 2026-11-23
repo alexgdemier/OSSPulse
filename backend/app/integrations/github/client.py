@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from urllib.parse import parse_qs, quote, urlparse
 
 import httpx
@@ -81,6 +81,7 @@ class GitHubClient:
         return results, complete
 
     def analyze(self, owner: str, repository: str) -> RepositorySnapshot:
+        fetched_at = datetime.now(UTC)
         headers = {
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
@@ -103,10 +104,16 @@ class GitHubClient:
             raw_issues, issues_complete = self._list(
                 client,
                 f"repos/{safe_owner}/{safe_repo}/issues",
-                {"state": "all", "sort": "updated"},
+                {"state": "open", "sort": "updated", "direction": "desc"},
             )
             raw_commits, commits_complete = self._list(
-                client, f"repos/{safe_owner}/{safe_repo}/commits", {"sha": repo.default_branch}
+                client,
+                f"repos/{safe_owner}/{safe_repo}/commits",
+                {
+                    "sha": repo.default_branch,
+                    "since": (fetched_at - timedelta(days=180)).isoformat().replace("+00:00", "Z"),
+                    "until": fetched_at.isoformat().replace("+00:00", "Z"),
+                },
             )
             raw_releases, releases_complete = self._list(
                 client, f"repos/{safe_owner}/{safe_repo}/releases"
@@ -158,7 +165,7 @@ class GitHubClient:
             commits=[GitHubCommit.model_validate(item) for item in raw_commits],
             releases=[GitHubRelease.model_validate(item) for item in raw_releases],
             files=files,
-            fetched_at=datetime.now(UTC),
+            fetched_at=fetched_at,
             completeness={
                 "issues": issues_complete,
                 "commits": commits_complete,

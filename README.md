@@ -10,7 +10,7 @@ OSS Pulse is an independent project and is not officially affiliated with GitHub
 
 ## Project status
 
-The core analysis and web report flows are implemented. The CLI and `POST /api/v1/analyze` fetch public repository data and generate a JSON report. The web app submits repositories to the API using a non-cacheable form submission and displays the saved report. Reports are stored in PostgreSQL and remain available after API restarts. Reports include bounded-paginated activity summaries, findings filters, and a public methodology page. A result with less than 50% data coverage is classified as `Insufficient Data`; dimensions without complete evidence are excluded from the weighted score. Community remains unscored until maintainer identity can be measured reliably.
+The current project version is `0.2.0-alpha`; it is not yet a stable release. The core analysis and web report flows are implemented. The CLI and `POST /api/v1/analyze` fetch public repository data and generate a JSON report. The web app submits repositories to the API using a non-cacheable form submission and displays the saved report. Reports are stored in PostgreSQL and remain available after API restarts. Reports include bounded-paginated activity summaries, findings filters, and a public methodology page. A result with less than 50% data coverage is classified as `Insufficient Data`; dimensions without complete evidence are excluded from the weighted score. Community remains unscored until maintainer identity can be measured reliably.
 
 ## Stack
 
@@ -18,12 +18,14 @@ The core analysis and web report flows are implemented. The CLI and `POST /api/v
 - `apps/web/`: Next.js and TypeScript.
 - PostgreSQL: repositories, analysis reports, dimension scores, findings, and insights.
 - GitHub REST API behind a centralized client.
+- Dockerfiles and a self-hosted Compose release stack; see the [deployment guide](docs/deployment.md).
 
 See the [architecture](docs/architecture.md), [scoring methodology](docs/scoring-methodology.md), [API](docs/api.md), and [roadmap](docs/roadmap.md).
+Deployment and pre-release checks are documented in the [deployment guide](docs/deployment.md), [release checklist](docs/release-checklist.md), [validation record](docs/release-validation.md), and [changelog](CHANGELOG.md).
 
 ## Requirements
 
-Python 3.11+, Node.js 20.9+, npm, and Docker Desktop for local PostgreSQL.
+Python 3.11+, Node.js 24+, npm, and Docker Desktop for local PostgreSQL.
 
 ## Local development
 
@@ -33,6 +35,8 @@ Start PostgreSQL from the repository root:
 Copy-Item .env.example .env
 docker compose up -d postgres
 ```
+
+For local PostgreSQL, keep `DATABASE_SSL=false`. Enable it only for a database endpoint that requires TLS.
 
 Install and run the backend:
 

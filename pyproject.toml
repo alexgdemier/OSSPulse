@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "oss-pulse"
-version = "0.1.0a0"
+version = "0.2.0a0"
 description = "Open source maintenance intelligence for GitHub repositories"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3,<9.0", "pytest-cov>=6.0,<7.0", "ruff>=0.8,<1.0"]
+dev = ["httpx2>=2.0,<3.0", "pytest>=8.3,<9.0", "pytest-cov>=6.0,<7.0", "ruff>=0.8,<1.0"]
 
 [project.scripts]
 oss-pulse = "app.cli:main"

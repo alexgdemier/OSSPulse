@@ -1,21 +1,9 @@
-import tsParser from "@typescript-eslint/parser";
-import nextPlugin from "@next/eslint-plugin-next";
-import reactPlugin from "eslint-plugin-react";
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextTs from "eslint-config-next/typescript";
+import nextVitals from "eslint-config-next/core-web-vitals";
 
-export default [
-  { ignores: [".next/**", "out/**", "build/**", "next-env.d.ts"] },
-  {
-    files: ["**/*.{js,jsx,ts,tsx}"],
-    settings: { react: { version: "detect" } },
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: { ecmaFeatures: { jsx: true }, sourceType: "module", ecmaVersion: "latest" },
-    },
-    plugins: { "@next/next": nextPlugin, react: reactPlugin },
-    rules: {
-      ...nextPlugin.configs.recommended.rules,
-      ...reactPlugin.configs.flat.recommended.rules,
-      ...reactPlugin.configs.flat["jsx-runtime"].rules,
-    },
-  },
-];
+export default defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+]);
