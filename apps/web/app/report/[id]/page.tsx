@@ -87,6 +87,7 @@ export default async function ReportPage({
     return <main className="shell report-shell"><p className="error-banner">This report has an unsupported or incomplete format. Analyze the repository again to create a current report.</p><Link href="/">← Back to OSS Pulse</Link></main>;
   }
   const report = payload;
+  const displayScore = report.classification === "Insufficient Data" ? null : report.health_score;
 
   const analyzed = new Date(report.analyzed_at).toLocaleString("en", {
     year: "numeric",
@@ -108,7 +109,7 @@ export default async function ReportPage({
         <div className="repo-meta"><span>{report.repository.language ?? "Language unavailable"}</span><span>{report.repository.stars.toLocaleString()} stars</span><span>{report.repository.forks.toLocaleString()} forks</span></div>
       </header>
       <section className="report-grid">
-        <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{report.health_score ?? "—"}<small>/100</small></div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${report.health_score ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}</p></article>
+        <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{displayScore ?? "—"}{displayScore !== null && <small>/100</small>}</div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${displayScore ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}{displayScore === null ? " · Total score withheld below 50% coverage" : ""}</p></article>
         <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className="dimension" key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div><div className="bar"><i className={score !== null && score >= 70 ? "green" : "amber"} style={{ width: `${score ?? 0}%` }} /></div></div>)}</article>
       </section>
       {report.data_completeness && <section className="data-availability" aria-label="Data availability">
