@@ -64,6 +64,16 @@ footer { display:flex; align-items:center; justify-content:space-between; gap:18
 .activity-cards article { display:flex; flex-direction:column; gap:10px; padding:15px 16px; border:1px solid #28312d; border-radius:7px; background:#111614; }
 .activity-cards span { color:#859188; font-size:9px; line-height:1.45; }
 .activity-cards strong { color:#dcefe1; font-size:24px; line-height:1; font-weight:570; font-variant-numeric:tabular-nums; }
+.activity-chart-section { margin-top:27px; padding:19px 18px 12px; border:1px solid #28312d; border-radius:7px; background:#111614; }
+.activity-chart-section .report-section-heading { margin-bottom:0; }
+.activity-chart-section h3 { margin:7px 0 0; color:#dce4de; font-size:14px; font-weight:560; }
+.chart-period,.chart-note { color:#7f8b83; font-size:9px; }
+.commit-chart { display:block; width:100%; height:auto; margin-top:7px; overflow:visible; }
+.chart-baseline { stroke:#2b3530; stroke-width:1; }
+.chart-bar { fill:#74cf98; opacity:.82; transition:opacity .15s ease; }
+.commit-chart g:hover .chart-bar { opacity:1; }
+.chart-label { fill:#87938b; font-size:10px; }
+.chart-note { margin:0 0 2px; }
 .report-finding { display:flex; gap:13px; align-items:flex-start; padding:18px 14px; border-top:1px solid #242c29; }
 .report-finding>.finding-dot { margin-top:7px; }
 .finding-content { flex:1; min-width:0; }
