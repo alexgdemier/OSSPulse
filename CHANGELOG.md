@@ -8,7 +8,8 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 - Treat complete evidence of no commit activity as zero activity instead of unevaluated data.
 - Treat complete release history with no published releases as zero release continuity and explain it with an informational finding.
-- Increment the scoring engine version to `0.2.1-alpha`; saved reports retain the score and version they were created with.
+- Count root-only repository signals only at the repository root, and recognize nested documentation and test directories in monorepos.
+- Increment the scoring engine version to `0.2.2-alpha`; saved reports retain the score and version they were created with.
 
 ### Release readiness
 

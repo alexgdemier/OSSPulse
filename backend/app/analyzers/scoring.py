@@ -12,7 +12,7 @@ DIMENSION_WEIGHTS = {
     "documentation": 15,
     "sustainability": 10,
 }
-ENGINE_VERSION = "0.2.1-alpha"
+ENGINE_VERSION = "0.2.2-alpha"
 
 WAITING_OR_BLOCKED_LABELS = {
     "blocked",
