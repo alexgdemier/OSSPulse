@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getApiBaseUrl } from "../../lib/api-url";
 
-const apiBase = (process.env.OSSPULSE_API_URL ?? "http://127.0.0.1:8002/api/v1").replace(/\/$/, "");
+const apiBase = getApiBaseUrl();
 const publicWebUrl = process.env.OSSPULSE_PUBLIC_URL;
 
 function redirectUrl(request: NextRequest, path: string) {

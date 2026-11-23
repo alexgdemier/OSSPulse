@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { getApiBaseUrl } from "../../lib/api-url";
 
-const apiBase = (process.env.OSSPULSE_API_URL ?? "http://127.0.0.1:8002/api/v1").replace(/\/$/, "");
+const apiBase = getApiBaseUrl();
 
 type ReportSummary = {
   report_id: string;
