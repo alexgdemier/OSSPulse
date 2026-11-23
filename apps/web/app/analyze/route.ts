@@ -7,8 +7,8 @@ export async function POST(request: NextRequest) {
 
   let repository: unknown;
   try {
-    const body = (await request.json()) as { repository?: unknown };
-    repository = body.repository;
+    const body = await request.formData();
+    repository = body.get("repository");
   } catch {
     target.searchParams.set("error", "The submitted form could not be read. Please try again.");
     return NextResponse.redirect(target, 303);
