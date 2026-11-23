@@ -22,6 +22,7 @@
 - [x] Initial live validation against two active repositories and one archived repository; outcomes are recorded in `release-validation.md`.
 - [ ] Reliable maintainer response signals; public issue data currently cannot establish whether an issue was seen by a maintainer.
 - [x] Suppress file-absence findings when GitHub truncates the repository tree and require complete release pagination for missing-release findings.
+- [x] Match root-only files at the repository root and recognize nested documentation and test directories in monorepos.
 
 ## Phase 2 — Web MVP (days 10–16)
 

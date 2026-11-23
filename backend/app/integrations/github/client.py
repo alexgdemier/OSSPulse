@@ -129,22 +129,20 @@ class GitHubClient:
             for item in raw_tree.get("tree", [])
             if item.get("type") == "blob"
         }
-        root_names = {name.rsplit("/", 1)[-1] for name in names}
+        root_names = {name for name in names if "/" not in name}
+        directory_names = {part for name in names for part in name.split("/")[:-1]}
+        documentation_directories = {"docs", "documentation"}
+        test_directories = {"test", "tests", "spec", "specs", "__tests__"}
         files = RepositoryFiles(
             readme=any(name == "readme" or name.startswith("readme.") for name in root_names),
             license=any(
                 name.startswith("license") or name.startswith("copying") for name in root_names
             ),
             contributing=any(name.startswith("contributing") for name in root_names),
-            docs=any(
-                name.startswith("docs/") or name.startswith("documentation/") for name in names
-            ),
-            tests=any(
-                name.startswith(("test/", "tests/", "spec/", "specs/"))
-                or "/tests/" in name
-                or name.startswith(".github/workflows/")
-                and "test" in name
-                for name in names
+            docs=bool(directory_names & documentation_directories),
+            tests=bool(directory_names & test_directories)
+            or any(
+                name.startswith(".github/workflows/") and "test" in name for name in names
             ),
             workflows=any(name.startswith(".github/workflows/") for name in names),
             development_config=any(
