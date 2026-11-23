@@ -13,6 +13,7 @@
 - [x] PostgreSQL persistence and initial schema migration.
 - [x] Recent report list and repository report history endpoints.
 - [x] Complete-window commit activity trends, descriptive activity summaries, and stale pull request exclusions for drafts and author-blocked work.
+- [x] Per-source completeness indicators in reports so users can see which GitHub data informed the analysis.
 - [ ] Broader validation across small, large, active, and archived repositories.
 - [ ] Reliable maintainer response signals; public issue data currently cannot establish whether an issue was seen by a maintainer.
 - [x] Suppress file-absence findings when GitHub truncates the repository tree and require complete release pagination for missing-release findings.

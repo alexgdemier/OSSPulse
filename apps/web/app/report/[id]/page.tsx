@@ -50,6 +50,13 @@ const labels: Record<string, string> = {
   sustainability: "Sustainability",
 };
 
+const dataSources = [
+  { key: "issues", label: "Issues & pull requests", detail: "Open and closed work items" },
+  { key: "commits", label: "Commit history", detail: "Activity windows and attributed authors" },
+  { key: "releases", label: "Releases", detail: "Published release history" },
+  { key: "repository_tree", label: "Default branch files", detail: "Project and documentation signals" },
+] as const;
+
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   let response: Response;
@@ -80,6 +87,14 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{report.health_score ?? "—"}<small>/100</small></div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${report.health_score ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}</p></article>
         <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className="dimension" key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div><div className="bar"><i className={score !== null && score >= 70 ? "green" : "amber"} style={{ width: `${score ?? 0}%` }} /></div></div>)}</article>
       </section>
+      {report.data_completeness && <section className="data-availability" aria-label="Data availability">
+        <div className="report-section-heading"><div><span className="section-label">DATA AVAILABILITY</span><h2>Sources used in this report</h2></div></div>
+        <div className="data-source-grid">{dataSources.map((source) => {
+          const complete = report.data_completeness?.[source.key];
+          const status = complete === undefined ? "Unknown" : complete ? "Complete" : "Incomplete";
+          return <article className="data-source" key={source.key}><div><strong>{source.label}</strong><span className={`data-status ${complete === undefined ? "unknown" : complete ? "complete" : "incomplete"}`}>{status}</span></div><p>{source.detail}</p></article>;
+        })}</div>
+      </section>}
       <section className="activity-summary" aria-label="Repository activity summary">
         <div className="report-section-heading"><div><span className="section-label">OBSERVED ACTIVITY</span><h2>Recent repository signals</h2></div></div>
         <div className="activity-cards">
