@@ -4,6 +4,13 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Maintainer response evidence
+
+- Add a bounded sample of issue replies that GitHub associates with an owner, organization member, or collaborator.
+- Show sample size, observed response count, median response time, and whether all fetched open issues were covered.
+- Keep response evidence descriptive and outside the Health Score because GitHub association does not verify maintainer status.
+- Increment the scoring and report engine version to `0.2.3-alpha`.
+
 ### Public service protection
 
 - Add PostgreSQL-backed per-visitor and global analysis quotas with retry guidance.

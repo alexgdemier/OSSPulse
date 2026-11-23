@@ -12,7 +12,7 @@ DIMENSION_WEIGHTS = {
     "documentation": 15,
     "sustainability": 10,
 }
-ENGINE_VERSION = "0.2.2-alpha"
+ENGINE_VERSION = "0.2.3-alpha"
 
 WAITING_OR_BLOCKED_LABELS = {
     "blocked",
@@ -106,6 +106,22 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         and item.committed_at
         and now - timedelta(days=90) <= item.committed_at <= now
     }
+    response_sample = [
+        issue for issue in open_issues if issue.response_history_complete is not None
+    ]
+    evaluated_response_sample = [
+        issue for issue in response_sample if issue.response_history_complete
+    ]
+    associated_responses = [
+        issue for issue in evaluated_response_sample if issue.repository_associated_response_at
+    ]
+    response_days = [
+        max(
+            0.0,
+            (issue.repository_associated_response_at - issue.created_at).total_seconds() / 86400,
+        )
+        for issue in associated_responses
+    ]
 
     dimensions: dict[str, float | None] = {
         "maintenance": None,
@@ -443,6 +459,15 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "stale_pull_requests": len(stale_prs) if snapshot.completeness["issues"] else None,
             "open_issues_with_no_comments": (
                 len(issues_without_comments) if snapshot.completeness["issues"] else None
+            ),
+            "repository_associated_response_sample_size": len(evaluated_response_sample),
+            "repository_associated_responses": len(associated_responses),
+            "median_days_to_repository_associated_response": (
+                round(median(response_days), 1) if response_days else None
+            ),
+            "repository_associated_response_sampled": len(response_sample),
+            "repository_associated_response_evidence_complete": snapshot.completeness.get(
+                "issue_response_sample", False
             ),
         },
         "repository_files": snapshot.files.model_dump(),

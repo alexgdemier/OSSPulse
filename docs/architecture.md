@@ -10,7 +10,7 @@ GitHub URL → validator → GitHub client → normalized data → analyzers
 
 The CLI and API share the same application core. The GitHub integration fetches a bounded snapshot; the scoring module builds the report and findings without network or storage access. The API persists the completed report and its normalized rows in PostgreSQL. The web app submits analysis through a POST route and renders stored reports by ID.
 
-The API applies shared PostgreSQL-backed analysis quotas, caches recent reports by repository and scoring-engine version, and prunes expired reports in bounded batches. Client addresses are HMAC-hashed before rate-limit storage. The web service signs the client address when proxying a form submission to the API; direct Vercel API requests use Vercel's forwarded client-IP header.
+The API applies shared PostgreSQL-backed analysis quotas, caches recent reports by repository and scoring-engine version, and prunes expired reports in bounded batches. Client addresses are HMAC-hashed before rate-limit storage. The web service signs the client address when proxying a form submission to the API; direct Vercel API requests use Vercel's forwarded client-IP header. GitHub-associated issue reply evidence is collected for a small configurable sample and remains descriptive until its reliability is validated across repositories. Comment text and commenter identities are used only transiently; reports retain only aggregate response counts and median timing.
 
 ## Module boundaries
 

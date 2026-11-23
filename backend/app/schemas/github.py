@@ -42,6 +42,8 @@ class GitHubIssue(BaseModel):
     pull_request: dict[str, Any] | None = None
     user: dict[str, Any] | None = None
     labels: list[dict[str, Any]] = []
+    repository_associated_response_at: datetime | None = None
+    response_history_complete: bool | None = None
 
     @property
     def is_pull_request(self) -> bool:

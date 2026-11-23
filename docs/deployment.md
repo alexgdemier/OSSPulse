@@ -22,7 +22,7 @@ Open `http://localhost:3000`. The first start builds the API and web images, sta
 
 The example password is suitable only for local use. If you add a `GITHUB_TOKEN`, use a read-only token for public repository metadata and keep the settings file private. `.env.local` is excluded from version control.
 
-The local Compose example disables request quotas so local experimentation is not throttled. The public deployment enables them. To test quotas locally, set `ANALYSIS_RATE_LIMIT_ENABLED=true`; the Compose stack shares limiter state through PostgreSQL. Set a private `ANALYSIS_PROXY_SECRET` in `.env.local` when the web service must sign visitor IPs for the API, as it does on Vercel. Repeated analyses reuse a report for six hours, reports older than 90 days are gradually pruned during analysis requests, and only the ten most recent reports per repository are kept by default.
+The local Compose example disables request quotas so local experimentation is not throttled. The public deployment enables them. To test quotas locally, set `ANALYSIS_RATE_LIMIT_ENABLED=true`; the Compose stack shares limiter state through PostgreSQL. Set a private `ANALYSIS_PROXY_SECRET` in `.env.local` when the web service must sign visitor IPs for the API, as it does on Vercel. Repeated analyses reuse a report for six hours, reports older than 90 days are gradually pruned during analysis requests, and only the ten most recent reports per repository are kept by default. GitHub comment lookups for response evidence are capped at five issues per repository by `GITHUB_ISSUE_RESPONSE_SAMPLE_SIZE`.
 
 ### Stop and restart
 

@@ -20,7 +20,7 @@
 - [x] Build and smoke-test the self-hosted Docker release stack, including database migrations and cross-service readiness.
 - [ ] Broader validation across small, large, active, quiet, archived, and forked repositories.
 - [x] Initial live validation against two active repositories and one archived repository; outcomes are recorded in `release-validation.md`.
-- [ ] Reliable maintainer response signals; public issue data currently cannot establish whether an issue was seen by a maintainer.
+- [ ] Validate the bounded GitHub-associated issue-response sample across diverse repositories before using response times in scoring; author association is only a proxy for maintainer status.
 - [x] Suppress file-absence findings when GitHub truncates the repository tree and require complete release pagination for missing-release findings.
 - [x] Match root-only files at the repository root and recognize nested documentation and test directories in monorepos.
 - [x] Add shared analysis quotas, recent-report caching, and bounded report retention for public traffic.

@@ -106,6 +106,52 @@ class GitHubClient:
                 f"repos/{safe_owner}/{safe_repo}/issues",
                 {"state": "open", "sort": "updated", "direction": "desc"},
             )
+            issues = [GitHubIssue.model_validate(item) for item in raw_issues]
+            eligible_response_issues = sorted(
+                (issue for issue in issues if not issue.is_pull_request),
+                key=lambda issue: (issue.created_at, issue.number),
+            )
+            response_sample = eligible_response_issues[: settings.github_issue_response_sample_size]
+            response_lookups_complete = True
+            for issue in response_sample:
+                if issue.comments == 0:
+                    issue.response_history_complete = True
+                    continue
+                try:
+                    comments_response = self._request(
+                        client,
+                        f"repos/{safe_owner}/{safe_repo}/issues/{issue.number}/comments",
+                        {"per_page": 100},
+                    )
+                    comments = comments_response.json()
+                except (GitHubAPIError, httpx.HTTPError) as exc:
+                    issue.response_history_complete = False
+                    response_lookups_complete = False
+                    if isinstance(exc, GitHubAPIError) and exc.status_code in (403, 429):
+                        break
+                    continue
+
+                associated_comment = next(
+                    (
+                        item
+                        for item in comments
+                        if str(item.get("author_association", "")).upper()
+                        in {"OWNER", "MEMBER", "COLLABORATOR"}
+                    ),
+                    None,
+                )
+                if associated_comment:
+                    issue.repository_associated_response_at = datetime.fromisoformat(
+                        associated_comment["created_at"].replace("Z", "+00:00")
+                    )
+                    issue.response_history_complete = True
+                    continue
+
+                has_next = 'rel="next"' in comments_response.headers.get("link", "")
+                issue.response_history_complete = not has_next and len(comments) >= issue.comments
+                response_lookups_complete = (
+                    response_lookups_complete and issue.response_history_complete
+                )
             raw_commits, commits_complete = self._list(
                 client,
                 f"repos/{safe_owner}/{safe_repo}/commits",
@@ -157,13 +203,19 @@ class GitHubClient:
         )
         return RepositorySnapshot(
             repository=repo,
-            issues=[GitHubIssue.model_validate(item) for item in raw_issues],
+            issues=issues,
             commits=[GitHubCommit.model_validate(item) for item in raw_commits],
             releases=[GitHubRelease.model_validate(item) for item in raw_releases],
             files=files,
             fetched_at=fetched_at,
             completeness={
                 "issues": issues_complete,
+                "issue_response_sample": (
+                    issues_complete
+                    and len(eligible_response_issues) <= len(response_sample)
+                    and response_lookups_complete
+                    and all(issue.response_history_complete is True for issue in response_sample)
+                ),
                 "commits": commits_complete,
                 "releases": releases_complete,
                 "repository_tree": not raw_tree.get("truncated", False),

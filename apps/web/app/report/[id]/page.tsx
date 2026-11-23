@@ -38,6 +38,11 @@ type Report = {
     open_pull_requests?: number | null;
     stale_pull_requests?: number | null;
     open_issues_with_no_comments?: number | null;
+    repository_associated_response_sample_size?: number;
+    repository_associated_responses?: number;
+    median_days_to_repository_associated_response?: number | null;
+    repository_associated_response_sampled?: number;
+    repository_associated_response_evidence_complete?: boolean;
   };
   data_completeness?: Record<string, boolean>;
   findings: Finding[];
@@ -57,6 +62,7 @@ const dataSources = [
   { key: "commits", label: "Commit history", detail: "Activity windows and attributed authors" },
   { key: "releases", label: "Releases", detail: "Published release history" },
   { key: "repository_tree", label: "Default branch files", detail: "Project and documentation signals" },
+  { key: "issue_response_sample", label: "Issue response sample", detail: "Capped issue sample; association is only a proxy" },
 ] as const;
 
 export default async function ReportPage({
@@ -136,6 +142,42 @@ export default async function ReportPage({
         {report.activity && typeof report.activity.commits_last_90_days !== "number" && <p className="method-note">Commit totals are unavailable because GitHub pagination was incomplete.</p>}
         {report.data_completeness?.issues === false && <p className="method-note">Issue and pull request totals are unavailable because GitHub pagination was incomplete.</p>}
       </section>
+      {typeof report.activity?.repository_associated_response_sample_size === "number" && (
+        <section className="response-summary" aria-label="Repository-associated response evidence">
+          <div className="report-section-heading">
+            <div>
+              <span className="section-label">RESPONSE EVIDENCE</span>
+              <h2>Repository-associated replies</h2>
+            </div>
+            <span className={`data-status ${report.activity.repository_associated_response_evidence_complete ? "complete" : "incomplete"}`}>
+              {report.activity.repository_associated_response_evidence_complete ? "Complete" : "Sample only"}
+            </span>
+          </div>
+          <div className="response-cards">
+            <article>
+              <span>Issues with associated replies</span>
+              <strong>
+                {report.activity.repository_associated_responses} / {report.activity.repository_associated_response_sample_size}
+              </strong>
+            </article>
+            <article>
+              <span>Median time to first associated reply</span>
+              <strong>
+                {typeof report.activity.median_days_to_repository_associated_response === "number"
+                  ? `${report.activity.median_days_to_repository_associated_response} days`
+                  : report.activity.repository_associated_response_sample_size
+                    ? "No associated reply observed"
+                    : report.activity.repository_associated_response_sampled
+                      ? "Not enough data"
+                      : "No open issues"}
+              </strong>
+            </article>
+          </div>
+          <p className="method-note">
+            Checked {report.activity.repository_associated_response_sampled} selected open issues. “Associated” uses GitHub’s OWNER, MEMBER, or COLLABORATOR label; it does not verify maintainer status. This sample is descriptive and does not affect the health score. No observed reply does not prove an issue was unseen.
+          </p>
+        </section>
+      )}
       <section className="report-findings">
         <div className="report-section-heading"><div><span className="section-label">ACTIONABLE FINDINGS</span><h2>What needs attention</h2></div><span className="count">{report.insights.length}</span></div>
         {report.insights.length === 0 ? <p className="empty-state">No findings were detected in the available data.</p> : <FindingsList insights={report.insights} />}
