@@ -18,14 +18,31 @@ The current project version is `0.2.0-alpha`; it is not yet a stable release. Th
 - `apps/web/`: Next.js and TypeScript.
 - PostgreSQL: repositories, analysis reports, dimension scores, findings, and insights.
 - GitHub REST API behind a centralized client.
-- Dockerfiles and a self-hosted Compose release stack; see the [deployment guide](docs/deployment.md).
+- Docker Compose for a complete local installation and Dockerfiles for building the individual services; see the [local usage guide](docs/deployment.md).
 
 See the [architecture](docs/architecture.md), [scoring methodology](docs/scoring-methodology.md), [API](docs/api.md), and [roadmap](docs/roadmap.md).
 Deployment and pre-release checks are documented in the [deployment guide](docs/deployment.md), [release checklist](docs/release-checklist.md), [validation record](docs/release-validation.md), and [changelog](CHANGELOG.md).
 
 ## Requirements
 
-Python 3.11+, Node.js 24+, npm, and Docker Desktop for local PostgreSQL.
+Docker Desktop (or Docker Engine with the Compose plugin) is the only requirement for the recommended local setup. Running services directly requires Python 3.11+, Node.js 24+, and npm.
+
+## Run the complete application locally
+
+The quickest path runs the web app, API, and PostgreSQL in containers. No hosting account or cloud service is needed.
+
+```powershell
+Copy-Item .env.compose.example .env.local
+docker compose --env-file .env.local -f docker-compose.release.yml up --build -d
+```
+
+Open `http://localhost:3000`. The first start builds the images and applies database migrations. The example Compose configuration binds the web app to loopback, so it is available only on your computer. To stop the application while preserving reports, run:
+
+```powershell
+docker compose --env-file .env.local -f docker-compose.release.yml down
+```
+
+Reports are stored in a Docker volume and remain available after stopping or upgrading the containers. To remove the application and its stored reports, add `-v` to the `down` command. Keep `.env.local` private; set `GITHUB_TOKEN` there only if you need a higher GitHub API rate limit.
 
 ## Local development
 
@@ -58,7 +75,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. The web app uses `http://127.0.0.1:8002/api/v1` by default. Set `OSSPULSE_API_URL` if the backend is hosted elsewhere.
+Open `http://localhost:3000`. The web app uses `http://127.0.0.1:8002/api/v1` by default. Set `OSSPULSE_API_URL` if the backend is running elsewhere.
 
 Analyze a repository from the terminal:
 

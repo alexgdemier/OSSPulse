@@ -5,9 +5,9 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env.production}
-      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env.production}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}
+      POSTGRES_DB: ${POSTGRES_DB:?Copy .env.compose.example to .env.local first}
+      POSTGRES_USER: ${POSTGRES_USER:?Copy .env.compose.example to .env.local first}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.compose.example to .env.local first}
     volumes:
       - oss_pulse_release_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
       dockerfile: backend/Dockerfile
     restart: "no"
     environment:
-      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env.production}
+      DATABASE_URL: ${DATABASE_URL:?Copy .env.compose.example to .env.local first}
       DATABASE_SSL: ${DATABASE_SSL:-false}
     depends_on:
       db:
@@ -35,7 +35,7 @@ services:
       dockerfile: backend/Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env.production}
+      DATABASE_URL: ${DATABASE_URL:?Copy .env.compose.example to .env.local first}
       DATABASE_SSL: ${DATABASE_SSL:-false}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       GITHUB_MAX_PAGES: ${GITHUB_MAX_PAGES:-3}

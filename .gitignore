@@ -17,6 +17,7 @@ dist/
 .env.*
 !.env.example
 !.env.production.example
+!.env.compose.example
 .vscode/
 .idea/
 .DS_Store
