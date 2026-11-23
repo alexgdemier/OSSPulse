@@ -100,6 +100,10 @@ footer { display:flex; align-items:center; justify-content:space-between; gap:18
 .clear-filters:hover { background:#1b251e; }
 .report-finding details { margin-top:10px; color:#89938c; font-size:10px; }
 .report-finding summary { cursor:pointer; width:max-content; }
+.finding-group-count { padding:3px 6px; border:1px solid #344038; border-radius:4px; color:#b6d5be; font-size:9px; font-variant-numeric:tabular-nums; }
+.finding-group-evidence ul { display:grid; gap:10px; max-height:420px; overflow:auto; margin:10px 0 0; padding:0 12px 0 18px; }
+.finding-group-evidence li { padding-left:3px; color:#aab5ad; line-height:1.55; }
+.finding-group-evidence li a { display:inline-block; margin-left:8px; color:var(--mint); white-space:nowrap; }
 .report-finding pre { max-width:100%; overflow:auto; padding:12px; border-radius:5px; background:#0b0e0d; color:#bac7be; font-size:10px; }
 .empty-state { padding:24px 0; color:#89938c; font-size:12px; }
 .back-link { color:#a5ada8; font-size:11px; }
