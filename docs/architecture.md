@@ -10,6 +10,8 @@ GitHub URL → validator → GitHub client → normalized data → analyzers
 
 The CLI and API share the same application core. The GitHub integration fetches a bounded snapshot; the scoring module builds the report and findings without network or storage access. The API persists the completed report and its normalized rows in PostgreSQL. The web app submits analysis through a POST route and renders stored reports by ID.
 
+The API applies shared PostgreSQL-backed analysis quotas, caches recent reports by repository and scoring-engine version, and prunes expired reports in bounded batches. Client addresses are HMAC-hashed before rate-limit storage. The web service signs the client address when proxying a form submission to the API; direct Vercel API requests use Vercel's forwarded client-IP header.
+
 ## Module boundaries
 
 - `integrations/github`: GitHub requests, pagination, timeouts, and normalized provider errors.
@@ -25,4 +27,4 @@ The monorepo contains a Python package shared by the CLI and FastAPI. PostgreSQL
 
 ## Security and operations
 
-Validate GitHub hosts and repository paths; reject arbitrary URLs and redirects. Centralize timeouts, bounded pagination, and rate-limit handling. Keep secrets out of logs and render repository content as escaped text.
+Validate GitHub hosts and repository paths; reject arbitrary URLs and redirects. Centralize timeouts, bounded pagination, and rate-limit handling. Keep secrets and raw client IP addresses out of logs and stored rate-limit buckets; render repository content as escaped text.

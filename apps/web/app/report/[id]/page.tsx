@@ -59,8 +59,15 @@ const dataSources = [
   { key: "repository_tree", label: "Default branch files", detail: "Project and documentation signals" },
 ] as const;
 
-export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ReportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ cached?: string }>;
+}) {
   const { id } = await params;
+  const { cached } = await searchParams;
   let response: Response;
   try {
     response = await fetch(`${apiBase}/reports/${encodeURIComponent(id)}`, { cache: "no-store" });
@@ -87,6 +94,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   return (
     <main className="shell report-shell">
       <nav className="nav"><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><div className="nav-links"><Link href="/reports">Reports</Link><Link href="/methodology">Methodology</Link><Link className="back-link" href="/">← Analyze another</Link></div></nav>
+      {cached === "1" && <p className="cache-note" role="status">Showing a recent saved analysis. The report timestamp shows when it was generated.</p>}
       <header className="report-heading">
         <div className="eyebrow"><span className="live-dot" /> REPOSITORY HEALTH REPORT</div>
         <h1><a href={report.repository.url} target="_blank" rel="noreferrer">{report.repository.full_name} ↗</a></h1>

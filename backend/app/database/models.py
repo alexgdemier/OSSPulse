@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import (
     JSON,
     BigInteger,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -106,3 +107,16 @@ class Insight(Base):
     )
     priority_score: Mapped[int] = mapped_column(Integer, nullable=False)
     finding: Mapped[Finding] = relationship(back_populates="insight")
+
+
+class AnalysisRateLimit(Base):
+    __tablename__ = "analysis_rate_limits"
+    __table_args__ = (
+        CheckConstraint("request_count > 0", name="ck_analysis_rate_limits_request_count_positive"),
+    )
+
+    bucket_key: Mapped[str] = mapped_column(String(96), primary_key=True)
+    window_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), primary_key=True, index=True
+    )
+    request_count: Mapped[int] = mapped_column(Integer, nullable=False)

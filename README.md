@@ -12,6 +12,8 @@ OSS Pulse is an independent project and is not officially affiliated with GitHub
 
 The current project version is `0.2.0-alpha`; it is not yet a stable release. The core analysis and web report flows are implemented. The CLI and `POST /api/v1/analyze` fetch public repository data and generate a JSON report. The web app submits repositories to the API using a non-cacheable form submission and displays the saved report. Reports are stored in PostgreSQL and remain available after API restarts. Reports include bounded-paginated activity summaries, findings filters, and a public methodology page. A result with less than 50% data coverage is classified as `Insufficient Data`; dimensions without complete evidence are excluded from the weighted score. Community remains unscored until maintainer identity can be measured reliably.
 
+Repeated web analyses of the same repository and scoring version reuse a six-hour cached report. Hosted analysis requests use shared per-visitor and global limits. Reports older than 90 days are pruned during analysis requests, and each repository keeps at most ten recent report snapshots by default. Adjust these values with the `ANALYSIS_*` and `REPORT_*` environment settings.
+
 ## Stack
 
 - `backend/`: Python, FastAPI, and a CLI sharing one analysis core.

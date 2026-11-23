@@ -4,6 +4,13 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Public service protection
+
+- Add PostgreSQL-backed per-visitor and global analysis quotas with retry guidance.
+- Reuse recent reports by repository and scoring engine to avoid duplicate GitHub requests.
+- Prune old report snapshots and cap per-repository history to bound database storage.
+- Sign forwarded visitor addresses between Vercel services and store only HMAC-derived rate-limit keys.
+
 ### Scoring reliability
 
 - Treat complete evidence of no commit activity as zero activity instead of unevaluated data.

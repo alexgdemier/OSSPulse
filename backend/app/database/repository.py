@@ -1,22 +1,25 @@
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.analyzers.scoring import DIMENSION_WEIGHTS
+from app.core.config import settings
+from app.database.analysis_protection import trim_repository_history
 from app.database.models import AnalysisReport, DimensionScore, Finding, Insight, Repository
 
 
 def save_report(session: Session, data: dict) -> None:
     try:
-        _save_report(session, data)
+        repository_id = _save_report(session, data)
+        trim_repository_history(session, repository_id=repository_id)
         session.commit()
     except Exception:
         session.rollback()
         raise
 
 
-def _save_report(session: Session, data: dict) -> None:
+def _save_report(session: Session, data: dict) -> int:
     repository_data = data["repository"]
     repository = session.scalar(
         select(Repository).where(Repository.github_id == repository_data["id"])
@@ -94,19 +97,30 @@ def _save_report(session: Session, data: dict) -> None:
         if insight:
             session.add(Insight(finding_id=finding.id, priority_score=insight["priority_score"]))
 
+    return repository.id
+
 
 def get_report(session: Session, report_id: str) -> dict | None:
-    report = session.get(AnalysisReport, report_id)
-    return report.report_data if report else None
+    cutoff = datetime.now(UTC) - timedelta(days=settings.report_retention_days)
+    statement = select(AnalysisReport.report_data).where(
+        AnalysisReport.id == report_id,
+        AnalysisReport.analyzed_at >= cutoff,
+    )
+    return session.scalar(statement)
 
 
 def get_repository_reports(
     session: Session, owner: str, name: str, *, limit: int = 20
 ) -> list[dict]:
+    cutoff = datetime.now(UTC) - timedelta(days=settings.report_retention_days)
     statement = (
         select(AnalysisReport.report_data)
         .join(Repository)
-        .where(Repository.owner.ilike(owner), Repository.name.ilike(name))
+        .where(
+            Repository.owner.ilike(owner),
+            Repository.name.ilike(name),
+            AnalysisReport.analyzed_at >= cutoff,
+        )
         .order_by(desc(AnalysisReport.analyzed_at))
         .limit(limit)
     )
@@ -115,6 +129,12 @@ def get_repository_reports(
 
 def list_recent_reports(session: Session, *, limit: int = 20) -> list[dict]:
     statement = (
-        select(AnalysisReport.report_data).order_by(desc(AnalysisReport.analyzed_at)).limit(limit)
+        select(AnalysisReport.report_data)
+        .where(
+            AnalysisReport.analyzed_at
+            >= datetime.now(UTC) - timedelta(days=settings.report_retention_days)
+        )
+        .order_by(desc(AnalysisReport.analyzed_at))
+        .limit(limit)
     )
     return list(session.scalars(statement))
