@@ -18,6 +18,8 @@ Base path: `/api/v1`. Analysis, report retrieval, repository history, findings, 
 
 `health_score` remains the weighted value of evaluable dimensions for API consumers, even below 50% coverage. In that case it is diagnostic only: the web report and report history hide the total and show `Insufficient Data` so a partial score is not mistaken for a reliable rating.
 
+Finding arrays contain one record per detected item. The web report visually groups repeated stale-issue and stale-pull-request signals; expanding a group exposes each finding and its source link without changing API output.
+
 Repeated analyses of the same repository and engine version reuse a report for six hours by default and return `X-OSS-Pulse-Cache: HIT`; a fresh analysis returns `MISS`. Hosted requests are limited to two per minute and ten per hour per visitor. A shared limit defaults to five analyses per hour without a GitHub token and 100 with one. These limits are configurable. A rejected request returns `429` with a `Retry-After` header. Caching is checked before the request limit, so cache hits do not consume analysis quota.
 
 Reports older than 90 days are deleted in bounded batches during analysis requests. Each repository retains at most ten recent report snapshots by default. Both retention settings are configurable. The web app transfers the visitor IP to the API with a signed server-to-server header; only an HMAC of the address is stored in rate-limit buckets.

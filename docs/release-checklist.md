@@ -5,7 +5,7 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 ## Before a stable release
 
 - [ ] Review false positives and calibrate expected scores after the initial six-repository validation; include additional medium-sized repositories and manually verify sampled findings.
-- [ ] Group or filter repetitive findings for repositories with very large open-item backlogs without hiding distinct evidence.
+- [x] Group repetitive stale-issue and stale-pull-request findings in the web report while keeping each finding and source link accessible.
 - [ ] Review every scoring signal and threshold against observed cases. Keep Community unscored until maintainer identity can be measured reliably.
 - [ ] Confirm CI passes Python lint and formatting, backend tests, PostgreSQL migrations and schema checks, web lint, TypeScript, and production build.
 - [ ] Deploy the same commit to staging with TLS, production-like PostgreSQL, edge rate limits, backups, and monitoring.

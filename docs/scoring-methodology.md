@@ -30,6 +30,8 @@ Dimensions that cannot be calculated are omitted, and the remaining weights are 
 
 Every finding stores a code, category, severity, explanation, dated evidence, recommendation, and source URL when available. Do not infer abandonment from a single signal.
 
+The report UI groups repeated stale-issue and stale-pull-request findings by signal to keep large backlogs readable. Expanding a group reveals each item's explanation and GitHub link. The API response and stored report continue to contain the individual findings.
+
 Recommendation priority is `P = 0.50 I + 0.30 U + 0.20 C`, where impact, urgency, and confidence range from 0 to 100. This is separate from the Health Score.
 
 | Score | Classification |
