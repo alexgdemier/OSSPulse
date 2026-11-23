@@ -12,7 +12,7 @@ DIMENSION_WEIGHTS = {
     "documentation": 15,
     "sustainability": 10,
 }
-ENGINE_VERSION = "0.2.0-alpha"
+ENGINE_VERSION = "0.2.1-alpha"
 
 WAITING_OR_BLOCKED_LABELS = {
     "blocked",
@@ -161,32 +161,27 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
     latest_release = max(dated_releases, key=lambda release: release.published_at, default=None)
     activity_trend = None
     if snapshot.completeness["commits"]:
-        activity = (
-            100.0
-            if recent_90 and not previous_90
-            else (
-                max(0.0, min(100.0, 100 * len(recent_90) / len(previous_90)))
-                if previous_90
-                else None
-            )
-        )
+        if recent_90 and not previous_90:
+            activity = 100.0
+        elif previous_90:
+            activity = max(0.0, min(100.0, 100 * len(recent_90) / len(previous_90)))
+        else:
+            activity = 0.0
         if previous_90:
             activity_trend = round(100 * (len(recent_90) - len(previous_90)) / len(previous_90), 1)
-        release_score = (
-            _score_age(
-                (now - latest_release.published_at).total_seconds() / 86400,
-                180,
-                730,
+        release_score = None
+        if snapshot.completeness["releases"]:
+            release_score = (
+                _score_age(
+                    (now - latest_release.published_at).total_seconds() / 86400,
+                    180,
+                    730,
+                )
+                if latest_release
+                else 0.0
             )
-            if latest_release
-            else None
-        )
         dimensions["sustainability"] = (
-            round(0.65 * activity + 0.35 * release_score, 1)
-            if activity is not None
-            and release_score is not None
-            and snapshot.completeness["releases"]
-            else None
+            round(0.65 * activity + 0.35 * release_score, 1) if release_score is not None else None
         )
 
     evaluable = {
@@ -365,24 +360,32 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "Review recent project activity and consider communicating the maintenance plan.",
             snapshot.repository.html_url,
         )
-    if (
-        snapshot.completeness["releases"]
-        and latest_release
-        and (now - latest_release.published_at).days >= 365
+    if snapshot.completeness["releases"] and (
+        latest_release is None or (now - latest_release.published_at).days >= 365
     ):
-        release_age = (now - latest_release.published_at).days
+        release_age = (now - latest_release.published_at).days if latest_release else None
+        release_description = (
+            "No published GitHub release was found in the complete release history."
+            if latest_release is None
+            else f"The latest published release is {release_age} days old."
+        )
+        release_evidence = (
+            {"published_release_found": False, "release_history_complete": True}
+            if latest_release is None
+            else {
+                "tag": latest_release.tag_name,
+                "published_at": latest_release.published_at.isoformat(),
+            }
+        )
         add(
             "SU002",
             "sustainability",
             "No recent release",
-            f"The latest published release is {release_age} days old.",
+            release_description,
             "informational",
-            {
-                "tag": latest_release.tag_name,
-                "published_at": latest_release.published_at.isoformat(),
-            },
+            release_evidence,
             "Review release cadence in the context of the project's scope and stability.",
-            latest_release.html_url,
+            latest_release.html_url if latest_release else snapshot.repository.html_url,
         )
 
     priorities = {"critical": 100, "high": 75, "medium": 50, "low": 25, "informational": 10}
