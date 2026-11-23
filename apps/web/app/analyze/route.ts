@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const apiBase = (process.env.OSSPULSE_API_URL ?? "http://127.0.0.1:8002/api/v1").replace(/\/$/, "");
+const publicWebUrl = process.env.OSSPULSE_PUBLIC_URL;
+
+function redirectUrl(request: NextRequest, path: string) {
+  const baseUrl = publicWebUrl ? new URL(publicWebUrl) : new URL(request.url);
+  return new URL(path, baseUrl);
+}
 
 export async function POST(request: NextRequest) {
-  const target = new URL("/", request.url);
+  const target = redirectUrl(request, "/");
 
   let repository: unknown;
   try {
@@ -54,7 +60,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(target, 303);
     }
     if (typeof result.report_id !== "string") throw new Error("The analysis response did not include a report ID.");
-    return NextResponse.redirect(new URL(`/report/${encodeURIComponent(result.report_id)}`, request.url), 303);
+    return NextResponse.redirect(redirectUrl(request, `/report/${encodeURIComponent(result.report_id)}`), 303);
   } catch {
     target.searchParams.set("error", "The analysis service is unavailable. Start the OSS Pulse API and try again.");
     return NextResponse.redirect(target, 303);
