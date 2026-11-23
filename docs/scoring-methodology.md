@@ -40,7 +40,7 @@ Recommendation priority is `P = 0.50 I + 0.30 U + 0.20 C`, where impact, urgency
 | 30–49 | At Risk |
 | 0–29 | Critical |
 
-These bands are provisional and need calibration across varied repositories. Reports retain the engine version so future methodology changes do not silently alter historical interpretation. A score with less than 50% coverage is classified as `Insufficient Data`; the weighted value is retained to show available signals, but is not presented as a reliable overall classification.
+These bands are provisional and need calibration across varied repositories. Reports retain the engine version so future methodology changes do not silently alter historical interpretation. A score with less than 50% coverage is classified as `Insufficient Data`; the API retains its weighted value for diagnostic use, but the web report and report history withhold the total score so a partial result is not mistaken for a reliable overall rating.
 
 ## Signals in engine version 0.2.3-alpha
 

@@ -66,7 +66,7 @@ export default async function ReportsPage() {
               </div>
             </div>
             <div className="saved-report-score">
-              <strong>{report.health_score ?? "—"}</strong>
+              <strong>{report.classification === "Insufficient Data" ? "—" : report.health_score ?? "—"}</strong>
               <span>{report.classification}</span>
               <small>{report.coverage}% coverage · {report.findings.length} findings</small>
             </div>

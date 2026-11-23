@@ -26,7 +26,7 @@ export default function MethodologyPage() {
       <section className="method-callout">
         <span className="section-label">THE CORE RULE</span>
         <h2>Unknown is not zero.</h2>
-        <p>When GitHub data is incomplete, OSS Pulse excludes affected dimensions from the weighted score and reduces coverage. Scores below 50% coverage are labeled <b>Insufficient Data</b>.</p>
+        <p>When GitHub data is incomplete, OSS Pulse excludes affected dimensions from the weighted score and reduces coverage. Scores below 50% coverage are labeled <b>Insufficient Data</b>, and the web app withholds the total score. The API retains the weighted value for diagnostic use.</p>
       </section>
 
       <section className="method-section">

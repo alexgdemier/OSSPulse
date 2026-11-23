@@ -18,7 +18,7 @@
 - [x] Database-backed readiness endpoint, optional verified PostgreSQL TLS, and PostgreSQL migration checks in CI.
 - [x] Align package versions to `0.2.0-alpha`, upgrade Next.js, and add dependency auditing and automated update PRs.
 - [x] Build and smoke-test the self-hosted Docker release stack, including database migrations and cross-service readiness.
-- [ ] Broader validation across small, large, active, quiet, archived, and forked repositories.
+- [x] Run point-in-time validation across small, active, large, quiet, archived, and forked repositories; results and coverage limits are recorded in `release-validation.md`.
 - [x] Initial live validation against two active repositories and one archived repository; outcomes are recorded in `release-validation.md`.
 - [ ] Validate the bounded GitHub-associated issue-response sample across diverse repositories before using response times in scoring; author association is only a proxy for maintainer status.
 - [x] Suppress file-absence findings when GitHub truncates the repository tree and require complete release pagination for missing-release findings.

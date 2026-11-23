@@ -4,7 +4,8 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 
 ## Before a stable release
 
-- [ ] Validate reports against a representative set of small, medium, large, active, quiet, archived, and forked public repositories; record false positives and expected scores.
+- [ ] Review false positives and calibrate expected scores after the initial six-repository validation; include additional medium-sized repositories and manually verify sampled findings.
+- [ ] Group or filter repetitive findings for repositories with very large open-item backlogs without hiding distinct evidence.
 - [ ] Review every scoring signal and threshold against observed cases. Keep Community unscored until maintainer identity can be measured reliably.
 - [ ] Confirm CI passes Python lint and formatting, backend tests, PostgreSQL migrations and schema checks, web lint, TypeScript, and production build.
 - [ ] Deploy the same commit to staging with TLS, production-like PostgreSQL, edge rate limits, backups, and monitoring.
@@ -16,7 +17,7 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 
 ## Current release status
 
-The project is at `0.2.0-alpha`. Automated checks cover backend behavior and PostgreSQL schema drift, but broad repository calibration and a production-like staging deployment still require completion. Do not describe the scoring as stable until those checks have been completed and documented.
+The project is at `0.2.0-alpha`. Initial point-in-time validation covers six public repositories across small, active, large, quiet, archived, and forked cases; broad false-positive review, score calibration, and a production-like staging deployment still require completion. Do not describe the scoring as stable until those checks have been completed and documented.
 
 ## Tooling follow-up
 

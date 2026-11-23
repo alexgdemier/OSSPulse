@@ -16,6 +16,8 @@ Base path: `/api/v1`. Analysis, report retrieval, repository history, findings, 
 
 `POST /analyze` accepts `{ "repository_url": "https://github.com/owner/repo" }` and returns the complete JSON report. It does not require authentication for public repositories. Reports are persisted in PostgreSQL and can be retrieved by ID after service restarts. If coverage is below 50%, classification is `Insufficient Data`.
 
+`health_score` remains the weighted value of evaluable dimensions for API consumers, even below 50% coverage. In that case it is diagnostic only: the web report and report history hide the total and show `Insufficient Data` so a partial score is not mistaken for a reliable rating.
+
 Repeated analyses of the same repository and engine version reuse a report for six hours by default and return `X-OSS-Pulse-Cache: HIT`; a fresh analysis returns `MISS`. Hosted requests are limited to two per minute and ten per hour per visitor. A shared limit defaults to five analyses per hour without a GitHub token and 100 with one. These limits are configurable. A rejected request returns `429` with a `Retry-After` header. Caching is checked before the request limit, so cache hits do not consume analysis quota.
 
 Reports older than 90 days are deleted in bounded batches during analysis requests. Each repository retains at most ten recent report snapshots by default. Both retention settings are configurable. The web app transfers the visitor IP to the API with a signed server-to-server header; only an HMAC of the address is stored in rate-limit buckets.
