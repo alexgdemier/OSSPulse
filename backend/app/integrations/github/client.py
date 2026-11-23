@@ -141,9 +141,7 @@ class GitHubClient:
             contributing=any(name.startswith("contributing") for name in root_names),
             docs=bool(directory_names & documentation_directories),
             tests=bool(directory_names & test_directories)
-            or any(
-                name.startswith(".github/workflows/") and "test" in name for name in names
-            ),
+            or any(name.startswith(".github/workflows/") and "test" in name for name in names),
             workflows=any(name.startswith(".github/workflows/") for name in names),
             development_config=any(
                 name in root_names
