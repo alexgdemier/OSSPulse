@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.analyzers.scoring import DIMENSION_WEIGHTS
@@ -90,3 +90,23 @@ def save_report(session: Session, data: dict) -> None:
 def get_report(session: Session, report_id: str) -> dict | None:
     report = session.get(AnalysisReport, report_id)
     return report.report_data if report else None
+
+
+def get_repository_reports(
+    session: Session, owner: str, name: str, *, limit: int = 20
+) -> list[dict]:
+    statement = (
+        select(AnalysisReport.report_data)
+        .join(Repository)
+        .where(Repository.owner.ilike(owner), Repository.name.ilike(name))
+        .order_by(desc(AnalysisReport.analyzed_at))
+        .limit(limit)
+    )
+    return list(session.scalars(statement))
+
+
+def list_recent_reports(session: Session, *, limit: int = 20) -> list[dict]:
+    statement = (
+        select(AnalysisReport.report_data).order_by(desc(AnalysisReport.analyzed_at)).limit(limit)
+    )
+    return list(session.scalars(statement))

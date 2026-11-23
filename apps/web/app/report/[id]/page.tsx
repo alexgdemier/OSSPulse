@@ -14,6 +14,8 @@ type Finding = {
   evidence: Record<string, unknown>;
 };
 
+type Insight = Finding & { priority_score: number };
+
 type Report = {
   report_id: string;
   analyzed_at: string;
@@ -24,7 +26,7 @@ type Report = {
   repository: { full_name: string; url: string; description: string | null; language: string | null; stars: number; forks: number };
   dimensions: Record<string, number | null>;
   findings: Finding[];
-  insights: (Finding & { priority_score: number })[];
+  insights: Insight[];
 };
 
 const labels: Record<string, string> = {
@@ -50,7 +52,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const analyzed = new Date(report.analyzed_at).toLocaleString("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC", timeZoneName: "short" });
   return (
     <main className="shell report-shell">
-      <nav className="nav"><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><Link className="back-link" href="/">← Analyze another</Link></nav>
+      <nav className="nav"><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><div className="nav-links"><Link href="/reports">Reports</Link><Link href="/methodology">Methodology</Link><Link className="back-link" href="/">← Analyze another</Link></div></nav>
       <header className="report-heading">
         <div className="eyebrow"><span className="live-dot" /> REPOSITORY HEALTH REPORT</div>
         <h1><a href={report.repository.url} target="_blank" rel="noreferrer">{report.repository.full_name} ↗</a></h1>
@@ -62,8 +64,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className="dimension" key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div><div className="bar"><i className={score !== null && score >= 70 ? "green" : "amber"} style={{ width: `${score ?? 0}%` }} /></div></div>)}</article>
       </section>
       <section className="report-findings">
-        <div className="report-section-heading"><div><span className="section-label">ACTIONABLE FINDINGS</span><h2>What needs attention</h2></div><span className="count">{report.findings.length}</span></div>
-        {report.findings.length === 0 ? <p className="empty-state">No findings were detected in the available data.</p> : report.findings.map((finding) => <article className="report-finding" key={`${finding.code}-${finding.source_url ?? finding.title}`}><span className={`finding-dot ${finding.severity === "critical" || finding.severity === "high" ? "high" : "medium"}`} /><div className="finding-content"><div className="finding-title"><span className="finding-code">{finding.code}</span><h3>{finding.title}</h3><span className={`severity severity-${finding.severity}`}>{finding.severity}</span></div><p>{finding.description}</p><p className="recommendation"><b>Suggested action</b> · {finding.recommendation}</p><details><summary>View evidence</summary><pre>{JSON.stringify(finding.evidence, null, 2)}</pre></details></div>{finding.source_url && <a className="arrow" href={finding.source_url} target="_blank" rel="noreferrer" aria-label="Open source on GitHub">↗</a>}</article>)}
+        <div className="report-section-heading"><div><span className="section-label">ACTIONABLE FINDINGS</span><h2>What needs attention</h2></div><span className="count">{report.insights.length}</span></div>
+        {report.insights.length === 0 ? <p className="empty-state">No findings were detected in the available data.</p> : report.insights.map((finding) => <article className="report-finding" key={`${finding.code}-${finding.source_url ?? finding.title}`}><span className={`finding-dot ${finding.severity === "critical" || finding.severity === "high" ? "high" : "medium"}`} /><div className="finding-content"><div className="finding-title"><span className="finding-code">{finding.code}</span><h3>{finding.title}</h3><span className={`severity severity-${finding.severity}`}>{finding.severity}</span><span className="priority-score">Priority {finding.priority_score}</span></div><p>{finding.description}</p><p className="recommendation"><b>Suggested action</b> · {finding.recommendation}</p><details><summary>View evidence</summary><pre>{JSON.stringify(finding.evidence, null, 2)}</pre></details></div>{finding.source_url && <a className="arrow" href={finding.source_url} target="_blank" rel="noreferrer" aria-label="Open source on GitHub">↗</a>}</article>)}
       </section>
       <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Analyzed {analyzed}</span><span>Coverage first · Unknown signals stay unknown</span></footer>
     </main>

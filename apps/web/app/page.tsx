@@ -4,7 +4,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ e
     <main className="shell">
       <nav className="nav" aria-label="Main navigation">
         <a className="brand" href="#top"><span className="brand-mark">◉</span> OSS PULSE</a>
-        <div className="nav-links"><a href="#method">Methodology</a><a href="https://github.com" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <div className="nav-links"><a href="/reports">Reports</a><a href="/methodology">Methodology</a><a href="https://github.com/alexgdemier/OSSPulse" target="_blank" rel="noreferrer">GitHub ↗</a></div>
       </nav>
       <section className="hero" id="top">
         {error && <p className="error-banner" role="alert">{error}</p>}

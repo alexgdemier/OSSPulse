@@ -6,7 +6,12 @@ import pytest
 from app.analyzers.scoring import build_report
 from app.cli import parse_repository_url
 from app.database.models import AnalysisReport, DimensionScore, Finding, Insight, Repository
-from app.database.repository import get_report, save_report
+from app.database.repository import (
+    get_report,
+    get_repository_reports,
+    list_recent_reports,
+    save_report,
+)
 from app.integrations.github import GitHubAPIError, GitHubClient
 from app.schemas.github import (
     GitHubCommit,
@@ -46,7 +51,7 @@ def test_unknown_report_returns_not_found(api_client):
     assert response.status_code == 404
 
 
-def test_report_is_persisted_in_normalized_tables(sqlite_sessions):
+def test_report_is_persisted_in_normalized_tables(sqlite_sessions, api_client):
     timestamp = "2026-11-23T12:00:00+00:00"
     report = {
         "report_id": "report-123",
@@ -96,6 +101,19 @@ def test_report_is_persisted_in_normalized_tables(sqlite_sessions):
         assert session.query(DimensionScore).count() == 2
         assert session.query(Finding).count() == 1
         assert session.query(Insight).count() == 1
+        assert len(get_repository_reports(session, "owner", "project")) == 1
+        assert len(list_recent_reports(session)) == 1
+
+    assert api_client.get("/api/v1/reports?limit=5").json()[0]["report_id"] == "report-123"
+    assert api_client.get("/api/v1/repositories/owner/project").json()["report_id"] == "report-123"
+    assert api_client.get("/api/v1/repositories/owner/project/reports").status_code == 200
+    assert (
+        api_client.get("/api/v1/repositories/owner/project/findings").json()[0]["code"] == "DC001"
+    )
+    assert (
+        api_client.get("/api/v1/repositories/owner/project/insights").json()[0]["priority_score"]
+        == 50
+    )
 
 
 def test_github_client_normalizes_snapshot_and_calls_central_api():

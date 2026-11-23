@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from httpx import HTTPError
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,8 +8,14 @@ from sqlalchemy.orm import Session
 
 from app.analyzers.scoring import build_report
 from app.database import get_db
-from app.database.repository import get_report as load_report
-from app.database.repository import save_report
+from app.database.repository import (
+    get_report as load_report,
+)
+from app.database.repository import (
+    get_repository_reports,
+    list_recent_reports,
+    save_report,
+)
 from app.integrations.github import GitHubAPIError, GitHubClient
 
 router = APIRouter()
@@ -17,6 +23,17 @@ router = APIRouter()
 
 class AnalyzeRequest(BaseModel):
     repository_url: HttpUrl
+
+
+def _load_repository_history(
+    session: Session, owner: str, repository: str, *, limit: int = 20
+) -> list[dict]:
+    try:
+        return get_repository_reports(session, owner, repository, limit=limit)
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=503, detail="Report storage is temporarily unavailable"
+        ) from exc
 
 
 @router.get("/health", tags=["service"])
@@ -55,6 +72,58 @@ def analyze(request: AnalyzeRequest, session: Session = Depends(get_db)) -> dict
         raise HTTPException(
             status_code=503, detail="Report storage is temporarily unavailable"
         ) from exc
+
+
+@router.get("/reports", tags=["reports"])
+def list_reports(
+    limit: int = Query(default=20, ge=1, le=100), session: Session = Depends(get_db)
+) -> list[dict]:
+    try:
+        return list_recent_reports(session, limit=limit)
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=503, detail="Report storage is temporarily unavailable"
+        ) from exc
+
+
+@router.get("/repositories/{owner}/{repository}", tags=["repositories"])
+def latest_repository_report(
+    owner: str, repository: str, session: Session = Depends(get_db)
+) -> dict:
+    reports = _load_repository_history(session, owner, repository)
+    if not reports:
+        raise HTTPException(status_code=404, detail="No report exists for this repository")
+    return reports[0]
+
+
+@router.get("/repositories/{owner}/{repository}/reports", tags=["reports"])
+def repository_report_history(
+    owner: str,
+    repository: str,
+    limit: int = Query(default=20, ge=1, le=100),
+    session: Session = Depends(get_db),
+) -> list[dict]:
+    return _load_repository_history(session, owner, repository, limit=limit)
+
+
+@router.get("/repositories/{owner}/{repository}/findings", tags=["findings"])
+def repository_findings(
+    owner: str, repository: str, session: Session = Depends(get_db)
+) -> list[dict]:
+    reports = _load_repository_history(session, owner, repository)
+    if not reports:
+        raise HTTPException(status_code=404, detail="No report exists for this repository")
+    return reports[0]["findings"]
+
+
+@router.get("/repositories/{owner}/{repository}/insights", tags=["insights"])
+def repository_insights(
+    owner: str, repository: str, session: Session = Depends(get_db)
+) -> list[dict]:
+    reports = _load_repository_history(session, owner, repository)
+    if not reports:
+        raise HTTPException(status_code=404, detail="No report exists for this repository")
+    return reports[0]["insights"]
 
 
 @router.get("/reports/{report_id}", tags=["reports"])
