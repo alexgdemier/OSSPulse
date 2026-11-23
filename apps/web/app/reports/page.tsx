@@ -53,7 +53,15 @@ export default async function ReportsPage() {
               <div>
                 <h2>{report.repository.full_name}</h2>
                 <p>{report.repository.description ?? "No repository description provided."}</p>
-                <span className="saved-report-date">{new Date(report.analyzed_at).toLocaleString("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC", timeZoneName: "short" })}</span>
+                <span className="saved-report-date">{new Date(report.analyzed_at).toLocaleString("en", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  timeZone: "UTC",
+                  timeZoneName: "short",
+                })}</span>
               </div>
             </div>
             <div className="saved-report-score">
