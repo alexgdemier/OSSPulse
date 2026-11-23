@@ -28,6 +28,7 @@ type Report = {
   repository: { full_name: string; url: string; description: string | null; language: string | null; stars: number; forks: number };
   dimensions: Record<string, number | null>;
   activity?: {
+    commit_activity_last_180_days?: { period_start: string; commits: number }[] | null;
     commits_last_30_days?: number | null;
     commits_last_90_days?: number | null;
     commits_previous_90_days?: number | null;
@@ -112,6 +113,17 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <article><span>Active commit authors · 90 days</span><strong>{report.activity?.active_commit_authors_last_90_days ?? "—"}</strong></article>
           <article><span>Open issues / pull requests</span><strong>{report.activity?.open_issues ?? "—"} / {report.activity?.open_pull_requests ?? "—"}</strong></article>
         </div>
+        <div className="activity-chart-section">
+          <div className="report-section-heading"><div><span className="section-label">COMMIT HISTORY</span><h3>Activity across the last 180 days</h3></div><span className="chart-period">12 periods · 15 days each</span></div>
+          {report.activity?.commit_activity_last_180_days ? (
+            <CommitActivityChart periods={report.activity.commit_activity_last_180_days} />
+          ) : report.activity?.commit_activity_last_180_days === null ? (
+            <p className="method-note">The chart is unavailable because GitHub did not return a complete commit history.</p>
+          ) : (
+            <p className="method-note">This saved report predates commit history charts. Analyze the repository again to view its 180-day activity.</p>
+          )}
+          {report.activity?.commit_activity_last_180_days && <p className="chart-note">Only complete commit histories are charted. Counts are grouped into 15-day periods.</p>}
+        </div>
         {typeof report.activity?.commit_activity_change_percent === "number" && <p className="method-note">Commit volume changed {report.activity.commit_activity_change_percent > 0 ? "+" : ""}{report.activity.commit_activity_change_percent}% compared with the previous 90-day window.</p>}
         {report.activity && typeof report.activity.commits_last_90_days !== "number" && <p className="method-note">Commit totals are unavailable because GitHub pagination was incomplete.</p>}
         {report.data_completeness?.issues === false && <p className="method-note">Issue and pull request totals are unavailable because GitHub pagination was incomplete.</p>}
@@ -122,6 +134,44 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </section>
       <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Analyzed {analyzed}</span><span>Coverage first · Unknown signals stay unknown</span></footer>
     </main>
+  );
+}
+
+function CommitActivityChart({
+  periods,
+}: {
+  periods: { period_start: string; commits: number }[];
+}) {
+  const maximum = Math.max(1, ...periods.map((period) => period.commits));
+  return (
+    <svg
+      className="commit-chart"
+      viewBox="0 0 720 180"
+      role="img"
+      aria-label="Commit counts for twelve 15-day periods over the last 180 days"
+    >
+      <line x1="10" y1="132" x2="710" y2="132" className="chart-baseline" />
+      {periods.map((period, index) => {
+        const height = period.commits === 0 ? 2 : Math.max(5, (period.commits / maximum) * 104);
+        const x = 20 + index * 58;
+        const date = new Date(period.period_start).toLocaleDateString("en", {
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        });
+        return (
+          <g key={period.period_start}>
+            <title>{date}: {period.commits} commits</title>
+            <rect x={x} y={132 - height} width="30" height={height} rx="3" className="chart-bar" />
+            {(index === 0 || index === 5 || index === 11) && (
+              <text x={x + 15} y="158" textAnchor="middle" className="chart-label">
+                {date}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 

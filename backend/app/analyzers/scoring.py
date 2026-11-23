@@ -73,6 +73,27 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
     commit_dates = [item.committed_at for item in snapshot.commits if item.committed_at]
     recent_30 = [stamp for stamp in commit_dates if now - timedelta(days=30) <= stamp <= now]
     recent_90 = [stamp for stamp in commit_dates if now - timedelta(days=90) <= stamp <= now]
+    activity_periods = None
+    if snapshot.completeness["commits"]:
+        activity_window_start = now - timedelta(days=180)
+        period_days = 15
+        period_counts = [0] * 12
+        for stamp in commit_dates:
+            if activity_window_start <= stamp <= now:
+                period_index = min(
+                    int((stamp - activity_window_start).total_seconds() // (period_days * 86400)),
+                    len(period_counts) - 1,
+                )
+                period_counts[period_index] += 1
+        activity_periods = [
+            {
+                "period_start": (
+                    activity_window_start + timedelta(days=period_days * index)
+                ).isoformat(),
+                "commits": count,
+            }
+            for index, count in enumerate(period_counts)
+        ]
     previous_90 = [
         stamp
         for stamp in commit_dates
@@ -404,6 +425,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         "dimensions": dimensions,
         "data_completeness": snapshot.completeness,
         "activity": {
+            "commit_activity_last_180_days": activity_periods,
             "commits_last_30_days": len(recent_30) if snapshot.completeness["commits"] else None,
             "commits_last_90_days": len(recent_90) if snapshot.completeness["commits"] else None,
             "commits_previous_90_days": len(previous_90)

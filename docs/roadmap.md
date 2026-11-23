@@ -28,7 +28,8 @@
 - [x] Landing page, repository analysis, report overview, findings, and recommendations.
 - [x] Saved reports list and public scoring methodology page.
 - [x] Activity summary and filtering by finding priority and category.
-- [ ] Historical activity charts and broader filtering options.
+- [x] Commit activity chart grouped into twelve 15-day periods over a complete 180-day history.
+- [ ] Broader filtering options.
 
 ## Phase 3 — Reliability and launch (days 17–23)
 
