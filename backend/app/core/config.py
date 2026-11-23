@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     github_api_url: str = "https://api.github.com"
     github_max_pages: int = 3
     github_timeout_seconds: float = 15.0
+    github_issue_response_sample_size: int = Field(default=5, ge=0, le=20)
     analysis_rate_limit_enabled: bool = True
     analysis_rate_limit_per_minute: int = Field(default=2, ge=1)
     analysis_rate_limit_per_hour: int = Field(default=10, ge=1)
