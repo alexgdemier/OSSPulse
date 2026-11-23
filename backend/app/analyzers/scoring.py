@@ -81,10 +81,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         for stamp in commit_dates:
             if activity_window_start <= stamp <= now:
                 period_index = min(
-                    int(
-                        (stamp - activity_window_start).total_seconds()
-                        // (period_days * 86400)
-                    ),
+                    int((stamp - activity_window_start).total_seconds() // (period_days * 86400)),
                     len(period_counts) - 1,
                 )
                 period_counts[period_index] += 1
