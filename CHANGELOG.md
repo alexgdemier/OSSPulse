@@ -4,6 +4,12 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Score eligibility explanations
+
+- Add API metadata identifying the incomplete data sources for each unavailable scoreable dimension.
+- Explain the 75% classification gate on insufficient-data report pages.
+- Increment the report engine, API, and web package versions to `0.3.1-alpha` so cached reports use the current response shape.
+
 ### Scoring coverage and versioning
 
 - Require 75% coverage before assigning a Health Score classification; this corresponds to complete data for every currently scoreable dimension while Community remains unscored.

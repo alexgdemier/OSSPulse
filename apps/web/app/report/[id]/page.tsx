@@ -25,6 +25,10 @@ type Report = {
   health_score: number | null;
   coverage: number;
   classification: string;
+  score_eligibility?: {
+    minimum_coverage: number;
+    unavailable_dimensions: { dimension: string; sources: string[] }[];
+  };
   repository: { full_name: string; url: string; description: string | null; language: string | null; stars: number; forks: number };
   dimensions: Record<string, number | null>;
   activity?: {
@@ -64,6 +68,13 @@ const dataSources = [
   { key: "repository_tree", label: "Default branch files", detail: "Project and documentation signals" },
   { key: "issue_response_sample", label: "Issue response sample", detail: "Capped issue sample; association is only a proxy" },
 ] as const;
+
+const dataSourceNames: Record<string, string> = {
+  issues: "issues and pull requests",
+  commits: "commit history",
+  releases: "release history",
+  repository_tree: "default branch files",
+};
 
 export default async function ReportPage({
   params,
@@ -112,6 +123,13 @@ export default async function ReportPage({
         <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{displayScore ?? "—"}{displayScore !== null && <small>/100</small>}</div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${displayScore ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}{displayScore === null ? " · Total score withheld because coverage is insufficient" : ""}</p></article>
         <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className="dimension" key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div><div className="bar"><i className={score !== null && score >= 70 ? "green" : "amber"} style={{ width: `${score ?? 0}%` }} /></div></div>)}</article>
       </section>
+      {report.classification === "Insufficient Data" && report.score_eligibility && (
+        <p className="score-eligibility-note" role="status">
+          A classification requires {report.score_eligibility.minimum_coverage}% coverage. Incomplete dimensions: {report.score_eligibility.unavailable_dimensions.length
+            ? report.score_eligibility.unavailable_dimensions.map(({ dimension, sources }) => `${labels[dimension] ?? dimension}${sources.length ? ` (${sources.map((source) => dataSourceNames[source] ?? source).join(", ")} incomplete)` : ""}`).join("; ")
+            : "the available evidence does not meet the minimum coverage"}.
+        </p>
+      )}
       {report.data_completeness && <section className="data-availability" aria-label="Data availability">
         <div className="report-section-heading"><div><span className="section-label">DATA AVAILABILITY</span><h2>Sources used in this report</h2></div></div>
         <div className="data-source-grid">{dataSources.map((source) => {

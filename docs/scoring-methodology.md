@@ -44,7 +44,9 @@ Recommendation priority is `P = 0.50 I + 0.30 U + 0.20 C`, where impact, urgency
 
 These bands are provisional and need calibration across varied repositories. Reports retain the engine version so future methodology changes do not silently alter historical interpretation. A score with less than 75% coverage is classified as `Insufficient Data`. Because Community is currently unscored, 75% represents complete evidence for all four scoreable dimensions. This threshold avoids presenting a high renormalized score when a full dimension such as Sustainability is unknown. The API retains its weighted value for diagnostic use, but the web report and report history withhold totals below the threshold.
 
-## Signals in engine version 0.3.0-alpha
+Reports include `score_eligibility.minimum_coverage` and an `unavailable_dimensions` list with the incomplete source or sources for each missing scoreable dimension. The report page uses this evidence to explain the `Insufficient Data` status. Older saved reports without this field remain readable and show the general coverage explanation.
+
+## Signals in engine version 0.3.1-alpha
 
 Maintenance scoring currently uses the median age of eligible open pull requests, the count of open issues with no comments, and time since the latest push. Draft pull requests and pull requests labeled as blocked, waiting for the author, or awaiting the author are excluded from stale pull request findings. A comment count of zero does not prove that a maintainer has not seen an issue; findings therefore say “Open issue with no comments.”
 
