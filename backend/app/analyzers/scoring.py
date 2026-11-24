@@ -12,7 +12,9 @@ DIMENSION_WEIGHTS = {
     "documentation": 15,
     "sustainability": 10,
 }
-ENGINE_VERSION = "0.2.3-alpha"
+SCOREABLE_DIMENSIONS = ("maintenance", "development", "documentation", "sustainability")
+ENGINE_VERSION = "0.3.0-alpha"
+MINIMUM_SCORE_COVERAGE = sum(DIMENSION_WEIGHTS[name] for name in SCOREABLE_DIMENSIONS)
 
 WAITING_OR_BLOCKED_LABELS = {
     "blocked",
@@ -438,7 +440,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         "coverage": coverage,
         "classification": (
             _classify(health_score)
-            if health_score is not None and coverage >= 50
+            if health_score is not None and coverage >= MINIMUM_SCORE_COVERAGE
             else "Insufficient Data"
         ),
         "dimensions": dimensions,

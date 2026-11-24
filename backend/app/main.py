@@ -5,7 +5,7 @@ from app.api.v1.router import router as v1_router
 app = FastAPI(
     title="OSS Pulse API",
     description="Open source maintenance intelligence.",
-    version="0.2.0-alpha",
+    version="0.3.0-alpha",
 )
 app.include_router(v1_router, prefix="/api/v1")
 

@@ -30,7 +30,7 @@ CI runs backend tests, Ruff lint and formatting, PostgreSQL migrations, Alembic 
 
 ## 2026-11-23 broader repository validation
 
-Six public repositories were analyzed with the local `0.2.3-alpha` engine using authenticated, read-only GitHub API access. No reports were saved to OSS Pulse and no repository was modified. The table records observed results, not target scores. `health_score` values below 50% coverage are diagnostic API values; the web UI now hides them and displays `Insufficient Data`.
+Six public repositories were analyzed with the `0.2.3-alpha` engine using authenticated, read-only GitHub API access. No reports were saved to OSS Pulse and no repository was modified. This was before the 75% minimum-coverage classification introduced in `0.3.0-alpha`; the table records point-in-time observations, not target scores. Under that earlier rule, `health_score` values below 50% coverage were diagnostic API values and the web UI hid them.
 
 | Case | Repository | Fork / archived | API score | Coverage | Issues | Commits | Releases | Tree |
 |---|---|---|---:|---:|---|---|---|---|
@@ -49,3 +49,15 @@ Six public repositories were analyzed with the local `0.2.3-alpha` engine using 
 - The tiny `octocat/Hello-World` repository has more than 7,500 open issues despite its one-kilobyte GitHub size. The three-page issue cap means its issue-derived signals correctly remain incomplete. Repeated stale issue and pull-request signals are now grouped in the web report while preserving each item's explanation and source link. False-positive review remains a release gate.
 - All six issue-response samples were marked incomplete. The issue data was either paginated beyond the current cap or the full open-issue set exceeded the five-item sample. This is expected under the current conservative completeness rule; these response metrics remain descriptive and do not affect scores.
 - These checks validate pagination and classification behavior for this sample only. They do not establish scoring calibration or verify each finding's project-specific context. Manually review false positives and add more medium-sized examples before stable release.
+
+## 2026-11-23 coverage-threshold follow-up
+
+Three additional active public repositories were analyzed with the `0.3.0-alpha` engine using authenticated, read-only GitHub API access. No reports were saved and no repositories were modified. The new minimum coverage is 75%, equal to the full weight of all four currently scoreable dimensions; Community remains unscored. Weighted scores below that threshold remain in API output for diagnostics, but classification and the web UI report `Insufficient Data`.
+
+| Repository | API score | Coverage | Classification | Issues | Commits | Releases | Tree |
+|---|---:|---:|---|---|---|---|---|
+| `encode/httpx` | 72 | 75% | Healthy | Complete | Complete | Complete | Complete |
+| `psf/black` | 98 | 65% | Insufficient Data | Complete | Incomplete | Complete | Complete |
+| `pallets/werkzeug` | 95 | 75% | Excellent | Complete | Complete | Complete | Complete |
+
+`psf/black` reached the 200-commit fetch cap within the analysis window. Sustainability was therefore unevaluated, leaving 65% coverage; the new rule prevents its diagnostic score of 98 from being presented as a complete classification. The other two repositories had complete evidence for the current scoreable dimensions and met the threshold. The issue-response samples for all three remained incomplete because the fetched open-issue sets exceeded the five-item sample; this experimental signal remains descriptive and unscored. These observations support the coverage guard, but three cases do not establish calibration of score bands or finding accuracy.
