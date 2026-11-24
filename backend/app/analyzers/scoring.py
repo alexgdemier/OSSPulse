@@ -13,7 +13,13 @@ DIMENSION_WEIGHTS = {
     "sustainability": 10,
 }
 SCOREABLE_DIMENSIONS = ("maintenance", "development", "documentation", "sustainability")
-ENGINE_VERSION = "0.3.0-alpha"
+DIMENSION_DATA_SOURCES = {
+    "maintenance": ("issues",),
+    "development": ("repository_tree",),
+    "documentation": ("repository_tree",),
+    "sustainability": ("commits", "releases"),
+}
+ENGINE_VERSION = "0.3.1-alpha"
 MINIMUM_SCORE_COVERAGE = sum(DIMENSION_WEIGHTS[name] for name in SCOREABLE_DIMENSIONS)
 
 WAITING_OR_BLOCKED_LABELS = {
@@ -220,6 +226,20 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         else None
     )
     coverage = sum(DIMENSION_WEIGHTS[name] for name in evaluable)
+    is_classifiable = health_score is not None and coverage >= MINIMUM_SCORE_COVERAGE
+    classification = _classify(health_score) if is_classifiable else "Insufficient Data"
+    unavailable_dimensions = [
+        {
+            "dimension": name,
+            "sources": [
+                source
+                for source in DIMENSION_DATA_SOURCES[name]
+                if not snapshot.completeness.get(source, False)
+            ],
+        }
+        for name in SCOREABLE_DIMENSIONS
+        if dimensions[name] is None
+    ]
     findings: list[dict[str, Any]] = []
 
     def add(
@@ -438,11 +458,11 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         "engine_version": ENGINE_VERSION,
         "health_score": health_score,
         "coverage": coverage,
-        "classification": (
-            _classify(health_score)
-            if health_score is not None and coverage >= MINIMUM_SCORE_COVERAGE
-            else "Insufficient Data"
-        ),
+        "classification": classification,
+        "score_eligibility": {
+            "minimum_coverage": MINIMUM_SCORE_COVERAGE,
+            "unavailable_dimensions": unavailable_dimensions,
+        },
         "dimensions": dimensions,
         "data_completeness": snapshot.completeness,
         "activity": {

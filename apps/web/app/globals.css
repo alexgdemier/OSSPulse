@@ -39,6 +39,7 @@ footer { display:flex; align-items:center; justify-content:space-between; gap:18
 .report-heading .lead { margin:0; max-width:760px; font-size:13px; }
 .repo-meta { display:flex; gap:19px; margin-top:18px; color:#87928b; font-size:10px; }
 .report-grid { display:grid; grid-template-columns:.8fr 1.2fr; gap:17px; }
+.score-eligibility-note { margin:12px 0 0; padding:12px 14px; border:1px solid #51462b; border-radius:6px; background:#1c1912; color:#d1bb81; font-size:11px; line-height:1.55; }
 .data-availability { padding:26px 0 12px; }
 .data-availability .report-section-heading { margin-bottom:12px; }
 .data-source-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }

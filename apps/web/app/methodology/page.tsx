@@ -42,7 +42,7 @@ export default function MethodologyPage() {
       </section>
 
       <section className="method-section">
-        <div className="method-section-heading"><span className="section-label">03 · ENGINE v0.3.0-ALPHA</span><h2>Current signals and limits</h2></div>
+        <div className="method-section-heading"><span className="section-label">03 · ENGINE v0.3.1-ALPHA</span><h2>Current signals and limits</h2></div>
         <div className="method-limits">
           <article><h3>Maintenance</h3><p>Uses the median age of eligible open pull requests, open issues with no comments, and time since the latest push. A separate sample checks up to five open issues for their first comment by a GitHub OWNER, MEMBER, or COLLABORATOR. This association is only a proxy for project involvement, not proof of maintainer status; the response sample is descriptive and is excluded from scoring. Draft pull requests and pull requests explicitly labeled as blocked or awaiting the author are excluded from stale pull request findings. No comments do not prove that a maintainer has not seen an issue.</p></article>
           <article><h3>Community</h3><p>Not currently scored. Public API data cannot reliably identify every maintainer or distinguish maintainers from external contributors. Reports show attributed active commit authors as a descriptive count instead.</p></article>
@@ -52,7 +52,7 @@ export default function MethodologyPage() {
         <p className="method-note">GitHub pagination and tree-size limits may reduce data completeness. Each report records completeness by source. The 75% minimum requires all currently scoreable dimensions to be evaluated; partial weighted values remain diagnostic only. Reports also retain the engine version so a future methodology change does not silently rewrite past results.</p>
       </section>
 
-      <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Methodology version 0.3.0-alpha</span><span>Evidence over assumptions</span></footer>
+      <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Methodology version 0.3.1-alpha</span><span>Evidence over assumptions</span></footer>
     </main>
   );
 }
