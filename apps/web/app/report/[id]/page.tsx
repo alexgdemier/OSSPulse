@@ -112,7 +112,7 @@ const dataSourceNames: Record<string, string> = {
 
 const incompleteDataDetails: Record<string, string> = {
   issues: "GitHub did not provide the full issue listing within the configured page limit. Issue-dependent scores and counts are omitted to avoid using a partial backlog.",
-  commits: "GitHub did not provide the full commit history within the configured page limit. Sustainability is omitted rather than calculated from a partial activity window.",
+  commits: "The commit list for the last 180 days exceeded the retrieval limit. Because some commits may be missing, Sustainability is left unscored to avoid a misleading activity comparison.",
   releases: "GitHub did not provide the full release history within the configured page limit. Release-dependent sustainability is omitted.",
   repository_tree: "GitHub truncated the default-branch file list. File-based dimensions are omitted rather than scored from partial results.",
   issue_response_sample: "At least one selected issue's reply history could not be fully checked. Community is omitted rather than scored from partial replies.",
