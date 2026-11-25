@@ -42,8 +42,9 @@ Complete the [release checklist](release-checklist.md), validate a staging deplo
 - [x] Execute a full local isolated Compose rehearsal for analysis, API restart persistence, real backup restore, and previous-version rollback.
 - [x] Add Python dependency auditing to CI and require both dependency audit and recovery drill in protected-branch checks.
 - [x] Add a voluntary maintainer calibration issue form with role evidence and review consent.
-- [ ] Collect maintainer-reviewed reference tiers; the first review remains unconfirmed until two independent maintainers assess the same snapshot.
-- [ ] Rehearse TLS, edge limits, failure recovery, and provider point-in-time restore in hosted staging. The current Neon Free project rejected five-minute compute autosuspend configuration, so no hosted staging resources were created.
+- [ ] Collect maintainer-reviewed reference tiers; no score band is confirmed until two independent maintainers assess the same snapshot.
+- [x] Validate hosted TLS, readiness, analysis quota, database failure/recovery, Neon point-in-time restore, cross-deployment persistence, and prior-commit rollback against an isolated Neon Free staging project and Vercel Preview.
+- [ ] Observe Neon Free autosuspension and verify Vercel CDN/WAF edge limits, automated monitoring, and hosted GitHub 403/429 handling.
 
 ## Phase 4 — Adoption (days 24–30)
 
