@@ -306,6 +306,76 @@ def test_404_is_normalized():
     assert caught.value.status_code == 404
 
 
+def test_github_rate_limit_headers_are_preserved():
+    reset_at = str(int(datetime.now(UTC).timestamp()) + 120)
+    transport = httpx.MockTransport(
+        lambda request: httpx.Response(
+            403,
+            json={"message": "API rate limit exceeded"},
+            headers={
+                "x-ratelimit-remaining": "0",
+                "x-ratelimit-reset": reset_at,
+                "retry-after": "30",
+            },
+        )
+    )
+    with pytest.raises(GitHubAPIError) as caught:
+        GitHubClient(transport=transport).analyze("owner", "repo")
+
+    assert caught.value.is_rate_limit
+    assert caught.value.retry_after_seconds == 30
+
+
+@pytest.mark.parametrize(
+    ("github_status", "github_message", "retry_after"),
+    [(403, "API rate limit exceeded", "120"), (429, "Too many requests", None)],
+)
+def test_github_rate_limit_errors_return_safe_retryable_api_response(
+    api_client, monkeypatch, github_status, github_message, retry_after
+):
+    from app.api.v1 import router
+
+    monkeypatch.setattr(router.settings, "analysis_rate_limit_enabled", False)
+
+    class RateLimitedGitHubClient:
+        def analyze(self, owner, repository):
+            raise GitHubAPIError(
+                github_status,
+                github_message,
+                retry_after=retry_after,
+                rate_limit_remaining="0" if github_status == 403 else None,
+            )
+
+    monkeypatch.setattr(router, "GitHubClient", RateLimitedGitHubClient)
+    response = api_client.post(
+        "/api/v1/analyze", json={"repository_url": "https://github.com/owner/repo"}
+    )
+
+    assert response.status_code == 429
+    assert response.json() == {"detail": "GitHub API rate limit reached"}
+    assert response.headers["Retry-After"] == (retry_after or "60")
+    assert github_message not in response.text
+
+
+def test_github_forbidden_response_is_not_misreported_as_rate_limit(api_client, monkeypatch):
+    from app.api.v1 import router
+
+    monkeypatch.setattr(router.settings, "analysis_rate_limit_enabled", False)
+
+    class ForbiddenGitHubClient:
+        def analyze(self, owner, repository):
+            raise GitHubAPIError(403, "Resource access forbidden")
+
+    monkeypatch.setattr(router, "GitHubClient", ForbiddenGitHubClient)
+    response = api_client.post(
+        "/api/v1/analyze", json={"repository_url": "https://github.com/owner/repo"}
+    )
+
+    assert response.status_code == 502
+    assert response.json() == {"detail": "GitHub API request failed"}
+    assert "Resource access forbidden" not in response.text
+
+
 def test_scoring_does_not_turn_missing_data_into_zero():
     now = datetime.now(UTC)
     repository = GitHubRepository(

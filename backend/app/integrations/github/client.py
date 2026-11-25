@@ -15,10 +15,40 @@ from app.schemas.github import (
 
 
 class GitHubAPIError(Exception):
-    def __init__(self, status_code: int, message: str, *, reset_at: str | None = None):
+    def __init__(
+        self,
+        status_code: int,
+        message: str,
+        *,
+        reset_at: str | None = None,
+        retry_after: str | None = None,
+        rate_limit_remaining: str | None = None,
+    ):
         self.status_code = status_code
         self.reset_at = reset_at
+        self.retry_after = retry_after
+        self.rate_limit_remaining = rate_limit_remaining
         super().__init__(message)
+
+    @property
+    def is_rate_limit(self) -> bool:
+        message = str(self).casefold()
+        return self.status_code == 429 or (
+            self.status_code == 403
+            and (
+                self.rate_limit_remaining == "0"
+                or "rate limit" in message
+                or "abuse detection" in message
+            )
+        )
+
+    @property
+    def retry_after_seconds(self) -> int | None:
+        if self.retry_after and self.retry_after.isdigit():
+            return max(1, int(self.retry_after))
+        if self.reset_at and self.reset_at.isdigit():
+            return max(1, int(self.reset_at) - int(datetime.now(UTC).timestamp()))
+        return None
 
 
 class GitHubClient:
@@ -35,7 +65,11 @@ class GitHubClient:
             except ValueError:
                 pass
             raise GitHubAPIError(
-                response.status_code, message, reset_at=response.headers.get("x-ratelimit-reset")
+                response.status_code,
+                message,
+                reset_at=response.headers.get("x-ratelimit-reset"),
+                retry_after=response.headers.get("retry-after"),
+                rate_limit_remaining=response.headers.get("x-ratelimit-remaining"),
             )
         return response
 
@@ -127,7 +161,7 @@ class GitHubClient:
                 except (GitHubAPIError, httpx.HTTPError) as exc:
                     issue.response_history_complete = False
                     response_lookups_complete = False
-                    if isinstance(exc, GitHubAPIError) and exc.status_code in (403, 429):
+                    if isinstance(exc, GitHubAPIError) and exc.is_rate_limit:
                         break
                     continue
 
