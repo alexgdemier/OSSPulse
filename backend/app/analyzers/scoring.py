@@ -21,12 +21,12 @@ SCOREABLE_DIMENSIONS = (
 )
 DIMENSION_DATA_SOURCES = {
     "maintenance": ("issues",),
-    "community": ("issue_response_sample",),
+    "community": ("issues", "issue_response_sample"),
     "development": ("repository_tree",),
     "documentation": ("repository_tree",),
     "sustainability": ("commits", "releases"),
 }
-ENGINE_VERSION = "0.4.0-alpha"
+ENGINE_VERSION = "0.4.1-alpha"
 MINIMUM_SCORE_COVERAGE = 75
 
 WAITING_OR_BLOCKED_LABELS = {
@@ -179,8 +179,8 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
     dimensions["maintenance"] = (
         round(maintenance_score, 1) if snapshot.completeness["issues"] else None
     )
-    # Score only a complete sample covering every fetched open issue. GitHub association
-    # labels are a proxy for project involvement, not a verified maintainer roster.
+    # Score a fully checked bounded sample from the complete open-issue listing. GitHub
+    # association labels are a proxy for project involvement, not a verified maintainer roster.
     community_score = None
     community_factors = None
     if snapshot.completeness.get("issue_response_sample", False):
