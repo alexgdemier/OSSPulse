@@ -1,5 +1,6 @@
 import hmac
 import ipaddress
+import logging
 from datetime import UTC, datetime
 from hashlib import sha256
 from urllib.parse import urlparse
@@ -30,6 +31,7 @@ from app.database.repository import (
 from app.integrations.github import GitHubAPIError, GitHubClient
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class AnalyzeRequest(BaseModel):
@@ -67,6 +69,7 @@ def _load_repository_history(
     try:
         return get_repository_reports(session, owner, repository, limit=limit)
     except SQLAlchemyError as exc:
+        logger.warning("Repository history lookup failed (%s)", type(exc).__name__)
         raise HTTPException(
             status_code=503, detail="Report storage is temporarily unavailable"
         ) from exc
@@ -82,6 +85,7 @@ def ready(session: Session = Depends(get_db)) -> dict[str, str]:
     try:
         session.execute(text("SELECT 1"))
     except SQLAlchemyError as exc:
+        logger.warning("Database readiness check failed (%s)", type(exc).__name__)
         raise HTTPException(status_code=503, detail="Database is unavailable") from exc
     return {"status": "ready"}
 
@@ -144,6 +148,7 @@ def analyze(
     except HTTPError as exc:
         raise HTTPException(status_code=502, detail="Could not connect to GitHub") from exc
     except SQLAlchemyError as exc:
+        logger.warning("Report analysis storage failed (%s)", type(exc).__name__)
         raise HTTPException(
             status_code=503, detail="Report storage is temporarily unavailable"
         ) from exc
@@ -156,6 +161,7 @@ def list_reports(
     try:
         return list_recent_reports(session, limit=limit)
     except SQLAlchemyError as exc:
+        logger.warning("Recent report lookup failed (%s)", type(exc).__name__)
         raise HTTPException(
             status_code=503, detail="Report storage is temporarily unavailable"
         ) from exc

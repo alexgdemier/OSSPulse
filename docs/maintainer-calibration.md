@@ -22,6 +22,12 @@ The CSV is a template, not evidence. Empty expected-band and reviewer fields mus
 
 > This is a snapshot of public repository metadata captured on the report date. Considering your project's intended scope and support policy, which OSS Pulse health band best describes its current maintenance health: Excellent, Healthy, Needs Attention, At Risk, or Critical? Which findings are actionable, contextual, or incorrect, and what context is missing? You may skip any question. Your answers will be recorded without personal contact details and used to evaluate scoring thresholds.
 
+## Submit a review
+
+Maintainers can submit a voluntary review through the [maintainer calibration issue form](../.github/ISSUE_TEMPLATE/maintainer-calibration.yml). Share the form with maintainers only when inviting participation. Before submitting, provide a public profile or repository link that shows the reviewer's maintainer role; do not include private contact details, credentials, security reports, or confidential project information. A submitted review is recorded as `Pending` until a second independent maintainer reviews the same report snapshot. Public submissions may identify the reviewer's GitHub account, so reviewers should submit only if they are comfortable with that attribution.
+
+The issue form is an intake mechanism, not proof of role or an automatic score confirmation. A project release maintainer must verify eligibility, preserve disagreements, and transfer only consented review data to the CSV ledger.
+
 ## Confirmation criteria
 
 - `Confirmed`: two or more maintainers for that repository independently selected the same expected band for the same report snapshot.

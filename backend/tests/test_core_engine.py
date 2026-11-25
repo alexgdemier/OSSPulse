@@ -48,7 +48,9 @@ def test_api_health_and_invalid_repository_url(api_client):
     assert response.status_code == 400
 
 
-def test_readiness_returns_service_unavailable_when_database_fails(api_client, monkeypatch):
+def test_readiness_returns_service_unavailable_when_database_fails(api_client, monkeypatch, caplog):
+    import logging
+
     from sqlalchemy.exc import SQLAlchemyError
     from sqlalchemy.orm import Session
 
@@ -56,9 +58,12 @@ def test_readiness_returns_service_unavailable_when_database_fails(api_client, m
         raise SQLAlchemyError("simulated database outage")
 
     monkeypatch.setattr(Session, "execute", fail_query)
-    response = api_client.get("/api/v1/ready")
+    with caplog.at_level(logging.WARNING, logger="app.api.v1.router"):
+        response = api_client.get("/api/v1/ready")
     assert response.status_code == 503
     assert response.json()["detail"] == "Database is unavailable"
+    assert "Database readiness check failed (SQLAlchemyError)" in caplog.text
+    assert "simulated database outage" not in caplog.text
 
 
 def test_database_ssl_uses_certificate_and_hostname_verification(monkeypatch):

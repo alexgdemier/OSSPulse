@@ -21,19 +21,24 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [x] Document operator checks, backup/restore rehearsal, incident response, and rollback in the [operations runbook](operations-runbook.md).
 - [x] Add a disposable local PostgreSQL recovery-drill script that verifies backup and restore without accessing application or production data.
 - [x] Run the synthetic recovery drill and the full isolated local Compose rehearsal: analysis, persistence after API restart, real backup restore, and application rollback.
-- [ ] Rehearse backup restoration and application rollback against a separately provisioned hosted staging database; local drills do not validate Neon point-in-time restore or hosted settings.
+- [x] Rehearse provider point-in-time restoration and application rollback against the isolated hosted staging database. The restored branch contained the saved report and migration revision `0003_analysis_abuse_protection`; the prior application commit passed readiness and retrieved the same report.
 - [x] Verify production `/api/v1/health` and `/api/v1/ready` on 2026-11-24; both returned HTTP 200.
-- [ ] Deploy the same commit to staging with isolated PostgreSQL, TLS, edge rate limits, backups, and monitoring; rehearse restore and rollback.
+- [x] Deploy the release candidate to an isolated hosted PostgreSQL staging database with TLS. The Preview passes HTTPS, health/readiness, analysis, and report retrieval; a new deployment and the prior application commit both read the saved report.
+- [ ] Publish and verify the Vercel CDN/WAF rate rule and confirm monitoring. The rule is staged for `/analyze` and `/api/v1/analyze` at 5 requests per IP per minute; Vercel requires human approval before this live firewall change. Its regional counter and one-million-request monthly Hobby allowance are documented by Vercel.
 - [x] Provide reproducible API and web container builds plus a self-hosted Compose release stack with migrations and health-gated startup.
 - [x] Verify local isolated Compose analysis, report persistence across API restart, report retrieval, backup restoration, and application rollback.
-- [ ] Verify hosted staging TLS, edge rate limits, GitHub rate limits, and database outage behavior.
+- [x] Verify hosted staging TLS and the database-backed analysis quota; TLS verification passed and the third rapid analysis request returned 429 with `Retry-After`.
+- [x] Verify Neon Free compute autosuspension and cold resume; the endpoint became idle after five minutes and returned to ready on the next request.
+- [x] Verify database outage behavior in isolated Preview; `/health` remained 200, `/ready` returned a generic 503, and readiness/report retrieval recovered after restoring the staging secret.
+- [ ] Verify Vercel edge/WAF controls and hosted GitHub 403/429 handling.
+- [x] Add a voluntary maintainer calibration issue form with public-role evidence and consent language; no reviews have been received or marked confirmed.
 - [x] Enable Dependabot alerts and automated security fixes; verify secret scanning and push protection; confirm clean `npm audit` in CI.
 - [x] Align Python, API, scoring engine, and web versions at `0.3.3-alpha`; update release notes and the changelog.
 - [ ] Tag the validated commit and publish installation, deployment, and support instructions.
 
 ## Current release status
 
-The project remains at `0.3.3-alpha`. Point-in-time validation covers sixteen public repositories; seven have complete score coverage, but none has an independent maintainer-provided reference tier, so the score bands remain provisional. Age-only finding severities were reduced and repository reports now include additional descriptive context. CI passes backend tests across Python 3.11–3.14, migrations, web checks, containers, recovery drill, and Python dependency audit. Dependabot alerts, automated fixes, secret scanning, and push protection are enabled. A local isolated Compose rehearsal has verified analysis, persistence after API restart, real backup restoration, and rollback to the prior app version. Hosted staging with TLS, edge controls, failure injection, and Neon point-in-time recovery remain open, as does maintainer-confirmed scoring calibration. Do not call the scoring stable until maintainers have reviewed the reference cases.
+The project remains at `0.3.3-alpha`. Point-in-time validation covers sixteen public repositories; seven have complete score coverage, but none has an independent maintainer-provided reference tier, so the score bands remain provisional. Age-only finding severities were reduced and repository reports now include additional descriptive context. CI passes backend tests across Python 3.11–3.14, migrations, web checks, containers, recovery drill, and Python dependency audit. Dependabot alerts, automated fixes, secret scanning, and push protection are enabled. A local isolated Compose rehearsal has verified analysis, persistence after API restart, real backup restoration, and rollback to the prior app version. The separate Neon Free staging project and Vercel Preview have passed HTTPS, health/readiness, analysis, quota, database failure/recovery, point-in-time restore, autosuspend/cold-resume, cross-deployment persistence, and prior-commit rollback checks. A WAF edge rule is prepared but still unpublished pending Vercel's human approval gate; hosted GitHub rate-limit injection and automated monitoring remain unverified. The voluntary maintainer review form is ready, but calibration remains open until real independent reviews arrive. Do not call the scoring stable until calibration and all remaining hosted operations gates are satisfied.
 
 ## Tooling follow-up
 
