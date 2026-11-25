@@ -88,7 +88,7 @@ const dimensionWeights: Record<string, number> = {
 
 const dimensionExplanations: Record<string, string> = {
   maintenance: "Looks at the age of open work, unanswered issues, and how long ago the project was updated.",
-  community: "Not scored yet. Public GitHub data cannot reliably tell who is a maintainer, so this part is left out.",
+  community: "Measures whether open issues receive timely replies from accounts GitHub associates with the repository. This is a limited proxy for community support, not a maintainer roster.",
   development: "Checks whether the main branch contains tests, automated workflows, and development setup files.",
   documentation: "Checks for a README, a license, contribution instructions, and a documentation folder.",
   sustainability: "Compares recent commit activity with the previous period and checks the age of the latest release.",
@@ -104,6 +104,7 @@ const dataSources = [
 
 const dataSourceNames: Record<string, string> = {
   issues: "issues and pull requests",
+  issue_response_sample: "complete issue response sample",
   commits: "commit history",
   releases: "release history",
   repository_tree: "default branch files",
@@ -177,7 +178,7 @@ export default async function ReportPage({
       </section>
       <section className="report-grid">
         <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{displayScore ?? "—"}{displayScore !== null && <small>/100</small>}</div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${displayScore ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}{displayScore === null ? " · Total score withheld because coverage is insufficient" : ""}</p></article>
-        <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => name === "community" ? <div className="dimension dimension-unscored" key={name}><div><span>{labels[name]}</span><b>Not scored</b></div><p>Excluded from the score until public data can measure this reliably.</p></div> : <div className="dimension" key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div><div className="bar"><i className={score !== null && score >= 70 ? "green" : "amber"} style={{ width: `${score ?? 0}%` }} /></div></div>)}</article>
+        <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className={`dimension${name === "community" && score === null ? " dimension-unscored" : ""}`} key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div>{score === null ? <p>{name === "community" ? "A complete sample with open issues is required." : "Required data is incomplete."}</p> : <div className="bar"><i className={score >= 70 ? "green" : "amber"} style={{ width: `${score}%` }} /></div>}</div>)}</article>
       </section>
       <section className="score-explanation" aria-label="How the score was calculated">
         <div className="report-section-heading"><div><span className="section-label">WHY THIS RESULT</span><h2>What shaped the score</h2></div></div>
@@ -187,10 +188,10 @@ export default async function ReportPage({
             const unavailable = report.score_eligibility?.unavailable_dimensions.find((item) => item.dimension === name);
             const factors = report.score_breakdown?.[name];
             return <article className="score-explanation-card" key={name}>
-              <div className="score-explanation-heading"><h3>{labels[name] ?? name}</h3><span>{name === "community" ? "Reserved · excluded from score" : `${dimensionWeights[name] ?? 0}% of the full score`}</span></div>
+              <div className="score-explanation-heading"><h3>{labels[name] ?? name}</h3><span>{`${dimensionWeights[name] ?? 0}% of the full score`}</span></div>
               <p>{dimensionExplanations[name] ?? "This category is not currently used in the score."}</p>
               {score === null ? (
-                <p className="score-explanation-missing">{name === "community" ? "This category does not lower the score or reduce data coverage. It stays out until public signals can reliably identify maintainers and measure community activity." : `Not counted because ${unavailable?.sources.map((source) => dataSourceNames[source] ?? source).join(" and ") || "the required information"} was incomplete.`}</p>
+                <p className="score-explanation-missing">{name === "community" ? "Not counted because the issue response sample did not cover all open issues, or there were no issues available to evaluate. A repository-associated GitHub account is only a proxy for project involvement." : `Not counted because ${unavailable?.sources.map((source) => dataSourceNames[source] ?? source).join(" and ") || "the required information"} was incomplete.`}</p>
               ) : factors?.length ? (
                 <ul>{factors.map((factor) => <li key={factor.label}><div><strong>{factor.label}</strong><span>{factor.observation}</span></div><b>{formatFactorScore(factor.score)} · {formatFactorWeight(factor.weight_percent)} of this category</b></li>)}</ul>
               ) : <p className="score-explanation-missing">This older report does not contain the details needed to explain each part. Run a new analysis to see them.</p>}

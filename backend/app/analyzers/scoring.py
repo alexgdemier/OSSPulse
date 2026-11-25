@@ -12,15 +12,22 @@ DIMENSION_WEIGHTS = {
     "documentation": 15,
     "sustainability": 10,
 }
-SCOREABLE_DIMENSIONS = ("maintenance", "development", "documentation", "sustainability")
+SCOREABLE_DIMENSIONS = (
+    "maintenance",
+    "community",
+    "development",
+    "documentation",
+    "sustainability",
+)
 DIMENSION_DATA_SOURCES = {
     "maintenance": ("issues",),
+    "community": ("issue_response_sample",),
     "development": ("repository_tree",),
     "documentation": ("repository_tree",),
     "sustainability": ("commits", "releases"),
 }
-ENGINE_VERSION = "0.3.3-alpha"
-MINIMUM_SCORE_COVERAGE = sum(DIMENSION_WEIGHTS[name] for name in SCOREABLE_DIMENSIONS)
+ENGINE_VERSION = "0.4.0-alpha"
+MINIMUM_SCORE_COVERAGE = 75
 
 WAITING_OR_BLOCKED_LABELS = {
     "blocked",
@@ -172,8 +179,46 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
     dimensions["maintenance"] = (
         round(maintenance_score, 1) if snapshot.completeness["issues"] else None
     )
-    # Public PR and commit data cannot reliably distinguish maintainers from external contributors.
-    dimensions["community"] = None
+    # Score only a complete sample covering every fetched open issue. GitHub association
+    # labels are a proxy for project involvement, not a verified maintainer roster.
+    community_score = None
+    community_factors = None
+    if snapshot.completeness.get("issue_response_sample", False):
+        if evaluated_response_sample:
+            response_rate = 100 * len(associated_responses) / len(evaluated_response_sample)
+            response_speed = (
+                sum(_score_age(days, 1, 30) for days in response_days)
+                / len(evaluated_response_sample)
+                if response_days
+                else 0.0
+            )
+            community_score = round(0.7 * response_rate + 0.3 * response_speed, 1)
+            community_factors = [
+                {
+                    "label": "Open issues with a repository-associated reply",
+                    "weight_percent": 70,
+                    "score": round(response_rate, 1),
+                    "observation": (
+                        f"{len(associated_responses)} of {len(evaluated_response_sample)} "
+                        "sampled open issues have a reply from an account GitHub associates "
+                        "with this repository."
+                    ),
+                },
+                {
+                    "label": "Time to repository-associated reply",
+                    "weight_percent": 30,
+                    "score": round(response_speed, 1),
+                    "observation": (
+                        f"Median observed response time was {round(median(response_days), 1)} days."
+                        if response_days
+                        else "No repository-associated replies were found in the complete sample."
+                    ),
+                },
+            ]
+        else:
+            # A complete empty issue queue has no response opportunities; do not infer health.
+            community_score = None
+    dimensions["community"] = community_score
 
     dev_checks = [snapshot.files.workflows, snapshot.files.tests, snapshot.files.development_config]
     dimensions["development"] = (
@@ -328,6 +373,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         ]
     score_breakdown = {
         "maintenance": maintenance_factors if dimensions["maintenance"] is not None else None,
+        "community": community_factors,
         "development": development_factors if dimensions["development"] is not None else None,
         "documentation": documentation_factors if dimensions["documentation"] is not None else None,
         "sustainability": sustainability_factors or None,
@@ -337,7 +383,8 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         name: score
         for name, score in dimensions.items()
         if score is not None
-        and (name not in {"maintenance", "community"} or snapshot.completeness["issues"])
+        and (name != "maintenance" or snapshot.completeness["issues"])
+        and (name != "community" or snapshot.completeness.get("issue_response_sample", False))
         and (
             name not in {"development", "documentation"} or snapshot.completeness["repository_tree"]
         )
@@ -363,7 +410,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             ],
         }
         for name in SCOREABLE_DIMENSIONS
-        if dimensions[name] is None
+        if dimensions[name] is None or name not in evaluable
     ]
     findings: list[dict[str, Any]] = []
 

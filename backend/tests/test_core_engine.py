@@ -558,6 +558,89 @@ def test_complete_commit_windows_report_activity_decline():
         assert factor_score == pytest.approx(report["dimensions"][dimension], abs=0.1)
 
 
+def test_community_score_requires_complete_issue_response_sample_and_explains_factors():
+    now = datetime.now(UTC)
+    repository = GitHubRepository(
+        id=88,
+        full_name="owner/community",
+        name="community",
+        html_url="https://github.com/owner/community",
+        created_at=now - timedelta(days=300),
+        updated_at=now,
+        pushed_at=now,
+        stargazers_count=0,
+        forks_count=0,
+        watchers_count=0,
+        open_issues_count=2,
+        default_branch="main",
+        owner={"login": "owner"},
+    )
+    issues = [
+        GitHubIssue(
+            number=1,
+            html_url="https://github.com/owner/community/issues/1",
+            title="Replied quickly",
+            state="open",
+            created_at=now - timedelta(days=10),
+            updated_at=now,
+            comments=1,
+            repository_associated_response_at=now - timedelta(days=9),
+            response_history_complete=True,
+        ),
+        GitHubIssue(
+            number=2,
+            html_url="https://github.com/owner/community/issues/2",
+            title="No associated reply",
+            state="open",
+            created_at=now - timedelta(days=20),
+            updated_at=now,
+            comments=1,
+            response_history_complete=True,
+        ),
+    ]
+    snapshot = RepositorySnapshot(
+        repository=repository,
+        issues=issues,
+        commits=[],
+        releases=[],
+        files=RepositoryFiles(
+            readme=True,
+            license=True,
+            contributing=True,
+            docs=True,
+            tests=True,
+            workflows=True,
+            development_config=True,
+        ),
+        fetched_at=now,
+        completeness={
+            "issues": True,
+            "issue_response_sample": True,
+            "commits": True,
+            "releases": True,
+            "repository_tree": True,
+        },
+    )
+
+    report = build_report(snapshot)
+    assert report["dimensions"]["community"] == pytest.approx(50.0)
+    factors = report["score_breakdown"]["community"]
+    assert [factor["weight_percent"] for factor in factors] == [70, 30]
+    weighted_community = sum(factor["score"] * factor["weight_percent"] / 100 for factor in factors)
+    assert weighted_community == pytest.approx(50)
+    assert report["coverage"] == 100
+
+    snapshot.completeness["issue_response_sample"] = False
+    incomplete_report = build_report(snapshot)
+    assert incomplete_report["dimensions"]["community"] is None
+    assert incomplete_report["coverage"] == 75
+    assert incomplete_report["score_eligibility"]["minimum_coverage"] == 75
+    assert incomplete_report["classification"] != "Insufficient Data"
+    assert incomplete_report["score_eligibility"]["unavailable_dimensions"] == [
+        {"dimension": "community", "sources": ["issue_response_sample"]}
+    ]
+
+
 def test_stale_pull_request_detection_skips_drafts_and_waiting_labels():
     now = datetime.now(UTC)
     repository = GitHubRepository(
