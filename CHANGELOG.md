@@ -4,6 +4,13 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Conservative finding severity
+
+- Set 30-day stale pull requests to medium severity and 60-day stale pull requests to high severity.
+- Set 14-day issues with no comments to low severity and 30-day issues with no comments to medium severity.
+- Keep the age-based Health Score unchanged; public metadata does not establish a finding's software impact.
+- Increment the report engine, API, and web package versions to `0.3.2-alpha` so cached reports use the revised severity labels.
+
 ### Score eligibility explanations
 
 - Add API metadata identifying the incomplete data sources for each unavailable scoreable dimension.
