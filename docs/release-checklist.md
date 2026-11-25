@@ -13,16 +13,23 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [x] Lower age-only issue and pull-request severities because GitHub metadata does not prove software impact.
 - [x] Group repetitive stale-issue and stale-pull-request findings in the web report while keeping each finding and source link accessible.
 - [ ] Review every scoring signal and threshold against observed cases. Keep Community unscored until maintainer identity can be measured reliably.
-- [ ] Confirm CI passes Python lint and formatting, backend tests, PostgreSQL migrations and schema checks, web lint, TypeScript, and production build.
+- [x] Confirm CI passes Python lint and formatting, backend tests, PostgreSQL migrations and schema checks, web lint, TypeScript, and production build (main commit `57e82ee`, 2026-11-25).
+- [x] Require npm audit in CI and enable GitHub Dependabot security alerts and automated security fixes.
+- [x] Run a Python runtime dependency audit locally; `pip-audit` found no known vulnerabilities.
+- [ ] Require Python runtime dependency auditing in CI and review its first CI result.
+- [x] Verify GitHub secret scanning and push protection are enabled; environment files are excluded from Git.
 - [x] Document operator checks, backup/restore rehearsal, incident response, and rollback in the [operations runbook](operations-runbook.md).
 - [x] Add a disposable local PostgreSQL recovery-drill script that verifies backup and restore without accessing application or production data.
-- [ ] Run the recovery drill and record the observed outcome; then rehearse application rollback and real backup restore in isolated staging.
+- [x] Run the synthetic recovery drill and the full isolated local Compose rehearsal: analysis, persistence after API restart, real backup restore, and application rollback.
+- [ ] Rehearse backup restoration and application rollback against a separately provisioned hosted staging database; local drills do not validate Neon point-in-time restore or hosted settings.
 - [x] Verify production `/api/v1/health` and `/api/v1/ready` on 2026-11-24; both returned HTTP 200.
 - [ ] Deploy the same commit to staging with isolated PostgreSQL, TLS, edge rate limits, backups, and monitoring; rehearse restore and rollback.
 - [x] Provide reproducible API and web container builds plus a self-hosted Compose release stack with migrations and health-gated startup.
-- [ ] Verify staging analysis, persistence across API restarts, report history, and behavior during GitHub rate limits and database outages.
-- [ ] Review dependency alerts, require a clean npm audit, verify secret handling and API exposure, and rehearse backup restoration and rollback.
-- [ ] Align Python, API, scoring engine, and web versions; update release notes and the changelog.
+- [x] Verify local isolated Compose analysis, report persistence across API restart, report retrieval, backup restoration, and application rollback.
+- [ ] Verify hosted staging TLS, edge rate limits, GitHub rate limits, and database outage behavior.
+- [x] Enable Dependabot alerts and automated security fixes; verify secret scanning and push protection; confirm clean `npm audit` in CI.
+- [ ] Run and review the first Python runtime dependency audit in CI.
+- [x] Align Python, API, scoring engine, and web versions at `0.3.3-alpha`; update release notes and the changelog.
 - [ ] Tag the validated commit and publish installation, deployment, and support instructions.
 
 ## Current release status

@@ -4,6 +4,13 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Release hardening
+
+- Add a Python runtime dependency audit to continuous integration.
+- Add a full local Compose release drill for real analysis, persistence, backup restoration, and previous-version rollback.
+- Require the recovery drill and Python dependency audit as GitHub branch-protection checks before merging to `main`.
+- Enable GitHub Dependabot security alerts and automated security fixes; retain secret scanning and push protection.
+
 ### Expanded repository context
 
 - Add repository age, topics, default branch, license, latest push, repository size, and enabled GitHub features to report metadata.
