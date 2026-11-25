@@ -13,10 +13,10 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [x] Lower age-only issue and pull-request severities because GitHub metadata does not prove software impact.
 - [x] Group repetitive stale-issue and stale-pull-request findings in the web report while keeping each finding and source link accessible.
 - [ ] Review every scoring signal and threshold against observed cases. Keep Community unscored until maintainer identity can be measured reliably.
-- [x] Confirm CI passes Python lint and formatting, backend tests, PostgreSQL migrations and schema checks, web lint, TypeScript, and production build (main commit `57e82ee`, 2026-11-25).
+- [x] Confirm CI passes Python lint and formatting, backend tests, PostgreSQL migrations and schema checks, web lint, TypeScript, production build, dependency audit, and recovery drill (main commit `4a3c9e6`, 2026-11-25).
 - [x] Require npm audit in CI and enable GitHub Dependabot security alerts and automated security fixes.
 - [x] Run a Python runtime dependency audit locally; `pip-audit` found no known vulnerabilities.
-- [ ] Require Python runtime dependency auditing in CI and review its first CI result.
+- [x] Require Python runtime dependency auditing in CI and review its first result: `pip-audit` found no known vulnerabilities in PR #20.
 - [x] Verify GitHub secret scanning and push protection are enabled; environment files are excluded from Git.
 - [x] Document operator checks, backup/restore rehearsal, incident response, and rollback in the [operations runbook](operations-runbook.md).
 - [x] Add a disposable local PostgreSQL recovery-drill script that verifies backup and restore without accessing application or production data.
@@ -28,13 +28,12 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [x] Verify local isolated Compose analysis, report persistence across API restart, report retrieval, backup restoration, and application rollback.
 - [ ] Verify hosted staging TLS, edge rate limits, GitHub rate limits, and database outage behavior.
 - [x] Enable Dependabot alerts and automated security fixes; verify secret scanning and push protection; confirm clean `npm audit` in CI.
-- [ ] Run and review the first Python runtime dependency audit in CI.
 - [x] Align Python, API, scoring engine, and web versions at `0.3.3-alpha`; update release notes and the changelog.
 - [ ] Tag the validated commit and publish installation, deployment, and support instructions.
 
 ## Current release status
 
-The project is at `0.3.3-alpha`. Point-in-time validation now covers sixteen unique public repositories, including a cross-language follow-up on the current engine. Seven complete-coverage results span `At Risk` through `Excellent`, but none has an independent maintainer-provided reference tier; the score bands therefore remain provisional. The manual review found stale-item examples that match the engine's age/no-comment predicates and contextual mass-automation labels that still need maintainer interpretation. Age-only finding severities were reduced because the available metadata cannot establish impact. Production health and database readiness both returned HTTP 200, and an operator runbook is available. Broad false-positive sign-off, independent score calibration, staging failure/recovery exercises, and verified backup restoration remain open. Do not describe the scoring as stable until those checks have been completed and documented.
+The project remains at `0.3.3-alpha`. Point-in-time validation covers sixteen public repositories; seven have complete score coverage, but none has an independent maintainer-provided reference tier, so the score bands remain provisional. Age-only finding severities were reduced and repository reports now include additional descriptive context. CI passes backend tests across Python 3.11–3.14, migrations, web checks, containers, recovery drill, and Python dependency audit. Dependabot alerts, automated fixes, secret scanning, and push protection are enabled. A local isolated Compose rehearsal has verified analysis, persistence after API restart, real backup restoration, and rollback to the prior app version. Hosted staging with TLS, edge controls, failure injection, and Neon point-in-time recovery remain open, as does maintainer-confirmed scoring calibration. Do not call the scoring stable until maintainers have reviewed the reference cases.
 
 ## Tooling follow-up
 

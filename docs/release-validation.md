@@ -119,12 +119,12 @@ A fresh read-only analysis of `psf/requests` retained its 67 score, 75% coverage
 - Added repository topics, default branch, creation age, last push/update, license, size, and GitHub feature flags to the API report and repository profile UI.
 - Added complete-history release context, reviewable pull-request median age and stale percentage, open-issue no-comment percentage, and GitHub-attributed top-account commit share.
 - These are descriptive context only; they do not change Health Score inputs or classification boundaries. Incomplete issue, commit, or release sources keep their dependent metrics unavailable.
-- Web lint, TypeScript, and production build passed locally. Ruff lint and format passed locally; backend tests were not run locally. Required GitHub CI will verify the backend test suite and integration flow before merge.
+- Web lint, TypeScript, and production build passed locally. Ruff lint and format passed locally; the full required backend, database, container, dependency-audit, and recovery checks passed in GitHub CI on PR #20 and main commit `4a3c9e6`.
 
 ## 2026-11-25 stable-release security and local staging rehearsal
 
 - Enabled GitHub Dependabot security alerts and automated security fixes. Confirmed repository secret scanning and push protection are enabled. GitHub reports Dependabot alerts were previously disabled; no code-scanning results were available.
-- `npm audit --audit-level=moderate` reported zero vulnerabilities. Local `pip-audit -r backend/requirements.txt` reported no known vulnerabilities; a Python runtime dependency audit was added to CI and its first CI result is pending.
+- `npm audit --audit-level=moderate` reported zero vulnerabilities. Both local `pip-audit -r backend/requirements.txt` and the required CI `dependency-audit` job reported no known vulnerabilities.
 - Ran `scripts/staging-rollback-drill.ps1` against the public `alexgdemier/OSSPulse` repository in a unique local Compose project. Analysis succeeded and included repository profile and release context. The report remained available after an API restart and rendered in the web app.
 - Restored a real custom-format dump into a separate database in that isolated project. Source and restored databases both contained one report and had Alembic revision `0003_analysis_abuse_protection`.
 - Built the previous application revision (`8b4fdab`) and rolled the API and web containers back against the isolated database. The previous version passed readiness and retrieved/rendered the report. The current version was then restored successfully.
