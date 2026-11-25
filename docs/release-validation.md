@@ -61,3 +61,47 @@ Three additional active public repositories were analyzed with the `0.3.0-alpha`
 | `pallets/werkzeug` | 95 | 75% | Excellent | Complete | Complete | Complete | Complete |
 
 `psf/black` reached the 200-commit fetch cap within the analysis window. Sustainability was therefore unevaluated, leaving 65% coverage; the new rule prevents its diagnostic score of 98 from being presented as a complete classification. The other two repositories had complete evidence for the current scoreable dimensions and met the threshold. The issue-response samples for all three remained incomplete because the fetched open-issue sets exceeded the five-item sample; this experimental signal remains descriptive and unscored. These observations support the coverage guard, but three cases do not establish calibration of score bands or finding accuracy.
+
+## 2026-11-24 broad false-positive and band review
+
+Eight public repositories were analyzed with `0.3.1-alpha` using authenticated, read-only GitHub API access. No reports were saved and no repositories were modified. Complete-source cases are usable for an observed score distribution; incomplete cases are shown only as diagnostics and excluded from band calibration.
+
+| Repository | Language | API score | Coverage | Classification | Issues | Commits | Releases | Tree |
+|---|---|---:|---:|---|---|---|---|---|
+| `expressjs/express` | JavaScript | 73 | 75% | Healthy | Complete | Complete | Complete | Complete |
+| `gin-gonic/gin` | Go | 84 | 45% | Insufficient Data | Incomplete | Complete | Complete | Complete |
+| `serde-rs/serde` | Rust | 91 | 35% | Insufficient Data | Incomplete | Complete | Incomplete | Complete |
+| `tailwindlabs/tailwindcss` | TypeScript | 80 | 65% | Insufficient Data | Complete | Complete | Incomplete | Complete |
+| `pallets/itsdangerous` | Python | 45 | 75% | At Risk | Complete | Complete | Complete | Complete |
+| `psf/requests` | Python | 67 | 75% | Needs Attention | Complete | Complete | Complete | Complete |
+| `pallets/flask` | Python | 85 | 75% | Excellent | Complete | Complete | Complete | Complete |
+| `pallets/click` | Python | 91 | 75% | Excellent | Complete | Complete | Complete | Complete |
+
+### Finding review
+
+- For `expressjs/express`, issue pagination was complete. The report emitted 88 `PR002` and 19 `PR001` findings. A sample of seven issue and pull-request records matched the explicit rules: the pull requests were open, not drafts, and had no activity for at least 30 or 60 days; the issue examples were open with no comments for at least 14 or 30 days. This confirms that the rules matched the observed fields, not that maintainers consider every item actionable.
+- For `psf/requests`, issue pagination was complete. The report emitted 77 `PR002` and two `PR001` findings. In the inspected records, 20 of the 79 stale pull requests carried the `mass-automation-pr` label. The label is contextual evidence that a maintainer should consider, but does not prove the findings are false positives. A maintainer should decide whether these batch-generated items should affect backlog scoring.
+- `gin-gonic/gin` exposed 837 open items but the client fetched the 300-item page cap. Its issue-derived dimension was correctly omitted and the diagnostic score of 84 was not classified. The partial stale-item findings are not treated as a complete repository backlog or calibration evidence.
+- `serde-rs/serde` and `tailwindlabs/tailwindcss` also had incomplete issue or release pagination. Their diagnostic values (91 and 80) were withheld from classification by the 75% gate.
+- The quiet `pallets/itsdangerous` case scored 45 with complete sources. The repository had no commits in the 180-day window, was last pushed about 528 days earlier, and its latest release was about 952 days old. Its low activity/release signals produce `At Risk`; this is a useful low-churn review candidate, not proof of abandonment or a confirmed false positive.
+- No clear contradiction to the engine's stated age and comment-count predicates was found in the sampled records. Project intent and whether a signal warrants action cannot be established from public issue metadata alone; independent maintainer review remains required.
+
+### Observed score-band distribution
+
+The five complete-coverage cases in this review plus `encode/httpx` (72) and `pallets/werkzeug` (95) from the prior follow-up produce these point-in-time observations: `At Risk` 1 (45), `Needs Attention` 1 (67), `Healthy` 2 (72, 73), `Excellent` 3 (85, 91, 95), and `Critical` 0. This is a seven-case score sample; the two prior cases use the same score bands and complete dimension coverage.
+
+This distribution describes what the current formula outputs; it does not validate whether a repository with a given score deserves that label. There is no independently reviewed expected tier for these projects, no Critical case, and only one At Risk and one Needs Attention case. Do not move the numerical band boundaries to fit this sample. Stable calibration needs maintainer-reviewed expected tiers, including mature low-churn libraries and projects with known backlogs.
+
+### Age-only severity adjustment in `0.3.2-alpha`
+
+The sampled records included old documentation and typing pull requests, a documentation issue, and a title-formatting issue. Their age/no-comment predicates were accurate, but the available metadata did not establish critical or high software impact. The engine now labels 14-day no-comment issues `low`, 30-day no-comment issues `medium`, 30-day stale pull requests `medium`, and 60-day stale pull requests `high`. This changes finding severity and recommendation priority, not Health Score values or score bands.
+
+A fresh read-only analysis of `psf/requests` retained its 67 score, 75% coverage, and `Needs Attention` classification while emitting 77 `PR002/high`, two `PR001/medium`, and 19 `IS002/medium` findings. This confirms the new mapping on the observed dataset; it does not establish that the remaining severity levels match maintainer priorities.
+
+## 2026-11-24 production and recovery preparation
+
+- `https://oss-pulse-iota.vercel.app/api/v1/health` returned HTTP 200 with `{"status":"ok"}`.
+- `https://oss-pulse-iota.vercel.app/api/v1/ready` returned HTTP 200 with `{"status":"ready"}`, confirming the API could query its configured database at that moment.
+- Vercel log queries for the latest 30 minutes returned no matching runtime error or HTTP 5xx records. The account rejected a 24-hour runtime-log query because that window exceeded its available retention. This is a short observation window, not proof of zero incidents.
+- Added the [operations runbook](operations-runbook.md) with health/readiness checks, release and migration order, a local isolated restore rehearsal, Vercel log queries, and incident/rollback steps.
+- Staging analysis persistence, database outage handling, backup restoration, and rollback have not been rehearsed. Those release gates remain open.

@@ -19,7 +19,7 @@ DIMENSION_DATA_SOURCES = {
     "documentation": ("repository_tree",),
     "sustainability": ("commits", "releases"),
 }
-ENGINE_VERSION = "0.3.1-alpha"
+ENGINE_VERSION = "0.3.2-alpha"
 MINIMUM_SCORE_COVERAGE = sum(DIMENSION_WEIGHTS[name] for name in SCOREABLE_DIMENSIONS)
 
 WAITING_OR_BLOCKED_LABELS = {
@@ -272,7 +272,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "maintenance",
             "Very stale pull request",
             f"This pull request has had no activity for {(now - pr.updated_at).days} days.",
-            "critical",
+            "high",
             {
                 "number": pr.number,
                 "updated_at": pr.updated_at.isoformat(),
@@ -288,7 +288,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
                 "maintenance",
                 "Stale pull request",
                 f"This pull request has had no activity for {(now - pr.updated_at).days} days.",
-                "high",
+                "medium",
                 {
                     "number": pr.number,
                     "updated_at": pr.updated_at.isoformat(),
@@ -303,7 +303,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "maintenance",
             "Open issue with no comments",
             f"No comments have been recorded for {(now - issue.created_at).days} days.",
-            "high",
+            "medium",
             {
                 "number": issue.number,
                 "created_at": issue.created_at.isoformat(),
@@ -319,7 +319,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
                 "maintenance",
                 "Open issue with no comments",
                 f"No comments have been recorded for {(now - issue.created_at).days} days.",
-                "medium",
+                "low",
                 {
                     "number": issue.number,
                     "created_at": issue.created_at.isoformat(),
