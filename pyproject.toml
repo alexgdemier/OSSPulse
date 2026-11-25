@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["httpx2>=2.0,<3.0", "pytest>=8.3,<9.0", "pytest-cov>=6.0,<7.0", "ruff>=0.8,<1.0"]
+dev = ["httpx2>=2.0,<3.0", "pytest>=8.3,<10.0", "pytest-cov>=6.0,<8.0", "ruff>=0.8,<1.0"]
 
 [project.scripts]
 oss-pulse = "app.cli:main"
