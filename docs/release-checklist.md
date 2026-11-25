@@ -7,6 +7,7 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [ ] Complete false-positive review and calibrate expected scores using independently reviewed repository cases.
   - [x] Extend live validation across eight additional current-engine cases in JavaScript, Go, Rust, and Python; record coverage and score-band distribution.
   - [x] Inspect representative issue and pull-request findings from complete datasets and identify contextual labels needing maintainer review.
+  - [x] Add a maintainer review protocol and an empty reference ledger; no tiers are marked confirmed without two independent maintainers reviewing the same snapshot.
   - [ ] Obtain maintainer-reviewed expected tiers and confirm whether contextual labels or stable low-churn projects produce false positives.
 - [x] Record the current score-band distribution and retain provisional thresholds until independent reference labels are available.
 - [x] Lower age-only issue and pull-request severities because GitHub metadata does not prove software impact.
@@ -14,6 +15,8 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [ ] Review every scoring signal and threshold against observed cases. Keep Community unscored until maintainer identity can be measured reliably.
 - [ ] Confirm CI passes Python lint and formatting, backend tests, PostgreSQL migrations and schema checks, web lint, TypeScript, and production build.
 - [x] Document operator checks, backup/restore rehearsal, incident response, and rollback in the [operations runbook](operations-runbook.md).
+- [x] Add a disposable local PostgreSQL recovery-drill script that verifies backup and restore without accessing application or production data.
+- [ ] Run the recovery drill and record the observed outcome; then rehearse application rollback and real backup restore in isolated staging.
 - [x] Verify production `/api/v1/health` and `/api/v1/ready` on 2026-11-24; both returned HTTP 200.
 - [ ] Deploy the same commit to staging with isolated PostgreSQL, TLS, edge rate limits, backups, and monitoring; rehearse restore and rollback.
 - [x] Provide reproducible API and web container builds plus a self-hosted Compose release stack with migrations and health-gated startup.
