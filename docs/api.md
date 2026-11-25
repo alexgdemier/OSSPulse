@@ -1,5 +1,7 @@
 # API v1
 
+Reports also include `repository.topics`, `default_branch`, `age_days`, `updated_at`, `pushed_at`, license metadata, `size_kb`, and GitHub feature flags. `release_context` includes the latest published release and count in the last 365 days when release pagination is complete. Activity adds median eligible open pull request age, stale pull request percentage, open issues with no comments percentage, and top attributed commit author share over the latest 90 days. These fields are descriptive and do not alter the Health Score. Rates are withheld when issue pagination is incomplete; release context is withheld when release pagination is incomplete. Top-author share reflects GitHub-linked commit accounts, not verified maintainers.
+
 Base path: `/api/v1`. Analysis, report retrieval, repository history, findings, and insights are available.
 
 | Method | Path | Purpose |
