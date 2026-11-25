@@ -100,6 +100,10 @@ For Neon, use the provider's current point-in-time restore or branch workflow to
 
 The CI container job recreates the Compose stack from an empty ephemeral database and checks the app responds. For application rollback, deploy the prior known-good commit to an isolated staging stack using a separate database, then verify health, readiness, a saved report read, and logs. Record both commit SHAs and the result. For schema changes, rollback is allowed only when the previous application version is compatible with the newer schema. Prefer a forward-fix migration if it is not; do not restore or downgrade production data as an application rollback shortcut. No production database rollback was performed as part of this local recovery drill.
 
+## Hosted Vercel rollback rehearsal
+
+For a hosted rollback rehearsal, create a temporary Git branch from the previous known-good commit and deploy it as a Vercel Preview. Add branch-specific Preview secrets pointing only to the isolated staging database, including `DATABASE_SSL=true`. Do not use the Production environment, production alias, or the `vercel rollback` command for this Preview exercise. Verify the deployment target is `preview`, then check `/api/v1/ready` and retrieve a report created by the newer application version. This confirms the previous app version remains compatible with the staging schema and saved data. Record both commit SHAs and the migration revision; remove the temporary branch and its branch-specific Preview variables after the rehearsal.
+
 ## Incident response
 
 ### API is unavailable
