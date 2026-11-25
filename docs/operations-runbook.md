@@ -13,6 +13,8 @@ curl.exe --fail --silent --show-error https://oss-pulse-iota.vercel.app/api/v1/r
 
 `/health` confirms that the API process responds. `/ready` performs a database query and returns `503` when the database is unavailable. A healthy web page alone does not prove that PostgreSQL is ready.
 
+Database-backed API failures return generic responses. The API runtime logs the operation and database exception class only; it deliberately omits exception messages and connection details, which may contain sensitive information.
+
 For recent Vercel runtime errors and failed requests, use an authorized Vercel CLI session and the retention available on the current plan:
 
 ```powershell
