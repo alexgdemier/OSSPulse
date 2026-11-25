@@ -29,7 +29,16 @@ type Report = {
     minimum_coverage: number;
     unavailable_dimensions: { dimension: string; sources: string[] }[];
   };
-  repository: { full_name: string; url: string; description: string | null; language: string | null; stars: number; forks: number };
+  repository: {
+    full_name: string; url: string; description: string | null; language: string | null;
+    stars: number; forks: number; topics?: string[]; default_branch?: string; age_days?: number;
+    pushed_at?: string | null; updated_at?: string; license?: { name?: string | null; spdx_id?: string | null } | null;
+    size_kb?: number | null; features?: { issues?: boolean | null; discussions?: boolean | null; wiki?: boolean | null };
+  };
+  release_context?: {
+    latest_published_release?: { tag: string; published_at: string; url: string; age_days: number } | null;
+    published_releases_last_365_days?: number | null;
+  };
   dimensions: Record<string, number | null>;
   activity?: {
     commit_activity_last_180_days?: { period_start: string; commits: number }[] | null;
@@ -41,7 +50,12 @@ type Report = {
     open_issues?: number | null;
     open_pull_requests?: number | null;
     stale_pull_requests?: number | null;
+    median_open_pull_request_age_days?: number | null;
+    stale_pull_request_percent?: number | null;
     open_issues_with_no_comments?: number | null;
+    open_issue_no_comment_percent?: number | null;
+    top_commit_author_share_last_90_days_percent?: number | null;
+    attributed_commits_last_90_days?: number | null;
     repository_associated_response_sample_size?: number;
     repository_associated_responses?: number;
     median_days_to_repository_associated_response?: number | null;
@@ -119,6 +133,20 @@ export default async function ReportPage({
         <p className="lead">{report.repository.description ?? "No repository description provided."}</p>
         <div className="repo-meta"><span>{report.repository.language ?? "Language unavailable"}</span><span>{report.repository.stars.toLocaleString()} stars</span><span>{report.repository.forks.toLocaleString()} forks</span></div>
       </header>
+      <section className="repository-profile" aria-label="Repository profile">
+        <div className="report-section-heading"><div><span className="section-label">REPOSITORY PROFILE</span><h2>Project context</h2></div></div>
+        <div className="profile-grid">
+          <article><span>License</span><strong>{report.repository.license?.spdx_id ?? report.repository.license?.name ?? "Not detected"}</strong></article>
+          <article><span>Project age</span><strong>{typeof report.repository.age_days === "number" ? formatDays(report.repository.age_days) : "—"}</strong></article>
+          <article><span>Last pushed</span><strong>{report.repository.pushed_at ? `${formatDays(Math.max(0, Math.floor((new Date(report.analyzed_at).getTime() - new Date(report.repository.pushed_at).getTime()) / 86400000)))} ago` : "No push date"}</strong></article>
+          <article><span>Last repository update</span><strong>{report.repository.updated_at ? `${formatDays(Math.max(0, Math.floor((new Date(report.analyzed_at).getTime() - new Date(report.repository.updated_at).getTime()) / 86400000)))} ago` : "—"}</strong></article>
+          <article><span>Default branch</span><strong>{report.repository.default_branch ?? "—"}</strong></article>
+          <article><span>Repository size</span><strong>{typeof report.repository.size_kb === "number" ? `${report.repository.size_kb.toLocaleString()} KB` : "—"}</strong></article>
+          <article><span>GitHub features</span><strong>{report.repository.features ? [report.repository.features.issues && "Issues", report.repository.features.discussions && "Discussions", report.repository.features.wiki && "Wiki"].filter(Boolean).join(" · ") || "None enabled" : "—"}</strong></article>
+          <article><span>Latest release</span><strong>{report.release_context?.latest_published_release ? `${report.release_context.latest_published_release.tag} · ${formatDays(report.release_context.latest_published_release.age_days)} ago` : !report.release_context ? "Not available in this report" : report.release_context.published_releases_last_365_days === null ? "History incomplete" : "No published release"}</strong></article>
+        </div>
+        {report.repository.topics?.length ? <div className="topic-list" aria-label="Repository topics">{report.repository.topics.map((topic) => <span key={topic}>{topic}</span>)}</div> : <p className="method-note">{report.repository.topics ? "No GitHub topics are set for this repository." : "Topics are not available in this saved report."}</p>}
+      </section>
       <section className="report-grid">
         <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{displayScore ?? "—"}{displayScore !== null && <small>/100</small>}</div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${displayScore ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}{displayScore === null ? " · Total score withheld because coverage is insufficient" : ""}</p></article>
         <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className="dimension" key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div><div className="bar"><i className={score !== null && score >= 70 ? "green" : "amber"} style={{ width: `${score ?? 0}%` }} /></div></div>)}</article>
@@ -145,7 +173,13 @@ export default async function ReportPage({
           <article><span>Commits · latest 90 days</span><strong>{report.activity?.commits_last_90_days ?? "—"}</strong></article>
           <article><span>Active commit authors · 90 days</span><strong>{report.activity?.active_commit_authors_last_90_days ?? "—"}</strong></article>
           <article><span>Open issues / pull requests</span><strong>{report.activity?.open_issues ?? "—"} / {report.activity?.open_pull_requests ?? "—"}</strong></article>
+          <article><span>Median age of reviewable open PRs</span><strong>{typeof report.activity?.median_open_pull_request_age_days === "number" ? `${report.activity.median_open_pull_request_age_days} days` : "—"}</strong></article>
+          <article><span>Open PRs inactive ≥30 days</span><strong>{report.activity?.stale_pull_requests ?? "—"}{typeof report.activity?.stale_pull_request_percent === "number" ? ` · ${report.activity.stale_pull_request_percent}%` : ""}</strong></article>
+          <article><span>Open issues with no comments</span><strong>{report.activity?.open_issues_with_no_comments ?? "—"}{typeof report.activity?.open_issue_no_comment_percent === "number" ? ` · ${report.activity.open_issue_no_comment_percent}%` : ""}</strong></article>
+          <article><span>Published releases · last year</span><strong>{report.release_context?.published_releases_last_365_days ?? "—"}</strong></article>
+          <article><span>Top attributed commit author share · 90 days</span><strong>{typeof report.activity?.top_commit_author_share_last_90_days_percent === "number" ? `${report.activity.top_commit_author_share_last_90_days_percent}%` : "—"}</strong></article>
         </div>
+        <p className="method-note">These figures describe fetched public GitHub data; they are not additional score dimensions. Stale PR percentages use reviewable open PRs and exclude drafts or work labeled as waiting/blocked. Author share uses GitHub-linked commit accounts only and does not identify maintainers. A dash means unavailable, incomplete, or no eligible sample.</p>
         <div className="activity-chart-section">
           <div className="report-section-heading"><div><span className="section-label">COMMIT HISTORY</span><h3>Activity across the last 180 days</h3></div><span className="chart-period">12 periods · 15 days each</span></div>
           {report.activity?.commit_activity_last_180_days ? (
@@ -256,4 +290,10 @@ function isReport(value: unknown): value is Report {
     && Array.isArray(report.insights)
     && Boolean(report.repository && typeof report.repository.full_name === "string")
     && Boolean(report.dimensions && typeof report.dimensions === "object");
+}
+
+function formatDays(days: number): string {
+  if (days < 30) return `${days} days`;
+  if (days < 365) return `${Math.floor(days / 30)} months`;
+  return `${(days / 365).toFixed(1)} years`;
 }

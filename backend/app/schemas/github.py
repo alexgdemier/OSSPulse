@@ -24,6 +24,11 @@ class GitHubRepository(BaseModel):
     archived: bool = False
     fork: bool = False
     topics: list[str] = []
+    license: dict[str, Any] | None = None
+    size: int | None = None
+    has_issues: bool | None = None
+    has_discussions: bool | None = None
+    has_wiki: bool | None = None
     owner: dict[str, Any]
 
 

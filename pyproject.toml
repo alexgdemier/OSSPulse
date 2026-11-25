@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "oss-pulse"
-version = "0.3.2a0"
+version = "0.3.3a0"
 description = "Open source maintenance intelligence for GitHub repositories"
 readme = "README.md"
 requires-python = ">=3.11"

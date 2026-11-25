@@ -19,7 +19,7 @@ DIMENSION_DATA_SOURCES = {
     "documentation": ("repository_tree",),
     "sustainability": ("commits", "releases"),
 }
-ENGINE_VERSION = "0.3.2-alpha"
+ENGINE_VERSION = "0.3.3-alpha"
 MINIMUM_SCORE_COVERAGE = sum(DIMENSION_WEIGHTS[name] for name in SCOREABLE_DIMENSIONS)
 
 WAITING_OR_BLOCKED_LABELS = {
@@ -130,6 +130,22 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         )
         for issue in associated_responses
     ]
+    attributed_commits = [
+        item
+        for item in snapshot.commits
+        if item.author_login
+        and item.committed_at
+        and now - timedelta(days=90) <= item.committed_at <= now
+    ]
+    author_commit_counts: dict[str, int] = {}
+    for item in attributed_commits:
+        author_key = item.author_login.casefold()
+        author_commit_counts[author_key] = author_commit_counts.get(author_key, 0) + 1
+    top_author_commit_share = (
+        100 * max(author_commit_counts.values()) / len(attributed_commits)
+        if attributed_commits
+        else None
+    )
 
     dimensions: dict[str, float | None] = {
         "maintenance": None,
@@ -183,6 +199,11 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
         if not release.draft and release.published_at is not None
     ]
     latest_release = max(dated_releases, key=lambda release: release.published_at, default=None)
+    releases_last_365_days = [
+        release
+        for release in dated_releases
+        if now - timedelta(days=365) <= release.published_at <= now
+    ]
     activity_trend = None
     if snapshot.completeness["commits"]:
         if recent_90 and not previous_90:
@@ -453,6 +474,35 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "open_issues_count": snapshot.repository.open_issues_count,
             "archived": snapshot.repository.archived,
             "fork": snapshot.repository.fork,
+            "topics": snapshot.repository.topics,
+            "default_branch": snapshot.repository.default_branch,
+            "updated_at": snapshot.repository.updated_at.isoformat(),
+            "pushed_at": snapshot.repository.pushed_at.isoformat()
+            if snapshot.repository.pushed_at
+            else None,
+            "age_days": max(0, (now - snapshot.repository.created_at).days),
+            "license": snapshot.repository.license,
+            "size_kb": snapshot.repository.size,
+            "features": {
+                "issues": snapshot.repository.has_issues,
+                "discussions": snapshot.repository.has_discussions,
+                "wiki": snapshot.repository.has_wiki,
+            },
+        },
+        "release_context": {
+            "latest_published_release": (
+                {
+                    "tag": latest_release.tag_name,
+                    "published_at": latest_release.published_at.isoformat(),
+                    "url": latest_release.html_url,
+                    "age_days": max(0, (now - latest_release.published_at).days),
+                }
+                if latest_release and snapshot.completeness["releases"]
+                else None
+            ),
+            "published_releases_last_365_days": (
+                len(releases_last_365_days) if snapshot.completeness["releases"] else None
+            ),
         },
         "analyzed_at": now.isoformat(),
         "engine_version": ENGINE_VERSION,
@@ -479,9 +529,26 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "open_issues": len(open_issues) if snapshot.completeness["issues"] else None,
             "open_pull_requests": len(open_prs) if snapshot.completeness["issues"] else None,
             "stale_pull_requests": len(stale_prs) if snapshot.completeness["issues"] else None,
+            "median_open_pull_request_age_days": round(median_pr_age, 1)
+            if snapshot.completeness["issues"] and reviewable_prs
+            else None,
+            "stale_pull_request_percent": round(100 * len(stale_prs) / len(reviewable_prs), 1)
+            if snapshot.completeness["issues"] and reviewable_prs
+            else None,
             "open_issues_with_no_comments": (
                 len(issues_without_comments) if snapshot.completeness["issues"] else None
             ),
+            "open_issue_no_comment_percent": round(
+                100 * len(issues_without_comments) / len(open_issues), 1
+            )
+            if snapshot.completeness["issues"] and open_issues
+            else None,
+            "top_commit_author_share_last_90_days_percent": round(top_author_commit_share, 1)
+            if top_author_commit_share is not None and snapshot.completeness["commits"]
+            else None,
+            "attributed_commits_last_90_days": len(attributed_commits)
+            if snapshot.completeness["commits"]
+            else None,
             "repository_associated_response_sample_size": len(evaluated_response_sample),
             "repository_associated_responses": len(associated_responses),
             "median_days_to_repository_associated_response": (

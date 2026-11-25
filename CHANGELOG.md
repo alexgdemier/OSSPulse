@@ -4,6 +4,13 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Expanded repository context
+
+- Add repository age, topics, default branch, license, latest push, repository size, and enabled GitHub features to report metadata.
+- Add complete-history release context, open pull request age and backlog rates, no-comment issue rates, and GitHub-attributed top-author commit share.
+- Display repository profile and descriptive activity context in the report without changing score inputs.
+- Increment the report engine, API, and web package versions to `0.3.3-alpha` so cached reports use the expanded response.
+
 ### Conservative finding severity
 
 - Set 30-day stale pull requests to medium severity and 60-day stale pull requests to high severity.

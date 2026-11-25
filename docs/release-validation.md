@@ -113,3 +113,10 @@ A fresh read-only analysis of `psf/requests` retained its 67 score, 75% coverage
 - Executed the recovery drill locally on 2026-11-25. It passed: one synthetic report and `recovery-drill-fixture` were present after restore. The drill did not access the Compose application database, Neon, production, or actual customer reports.
 - Added an isolated staging application rollback procedure and clarified that schema compatibility must be reviewed before rolling application code back.
 - A real staging backup restore, rollback of an application deployment against staging data, and maintainer-confirmed score labels remain open release gates.
+
+## 2026-11-25 expanded repository context
+
+- Added repository topics, default branch, creation age, last push/update, license, size, and GitHub feature flags to the API report and repository profile UI.
+- Added complete-history release context, reviewable pull-request median age and stale percentage, open-issue no-comment percentage, and GitHub-attributed top-account commit share.
+- These are descriptive context only; they do not change Health Score inputs or classification boundaries. Incomplete issue, commit, or release sources keep their dependent metrics unavailable.
+- Web lint, TypeScript, and production build passed locally. Ruff lint and format passed locally; backend tests were not run locally. Required GitHub CI will verify the backend test suite and integration flow before merge.

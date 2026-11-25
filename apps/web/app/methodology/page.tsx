@@ -52,7 +52,7 @@ export default function MethodologyPage() {
         <p className="method-note">GitHub pagination and tree-size limits may reduce data completeness. Each report records completeness by source. The 75% minimum requires all currently scoreable dimensions to be evaluated; partial weighted values remain diagnostic only. Reports also retain the engine version so a future methodology change does not silently rewrite past results.</p>
       </section>
 
-      <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Methodology version 0.3.2-alpha</span><span>Evidence over assumptions</span></footer>
+      <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Methodology version 0.3.3-alpha</span><span>Evidence over assumptions</span></footer>
     </main>
   );
 }
