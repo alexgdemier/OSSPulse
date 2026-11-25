@@ -37,6 +37,10 @@
 
 Complete the [release checklist](release-checklist.md), validate a staging deployment, fix false positives, and publish a stable release only after scoring and operations are reviewed.
 
+- [x] Add a maintainer calibration protocol, confirmation criteria, and an empty reference ledger; expected score bands still require actual maintainer responses.
+- [x] Add an isolated disposable PostgreSQL backup/restore drill and staging rollback procedure.
+- [ ] Execute the drill, record results, collect maintainer-reviewed reference tiers, and rehearse recovery against an isolated staging database.
+
 ## Phase 4 — Adoption (days 24–30)
 
 Gather real user feedback and contributions; report adoption honestly.

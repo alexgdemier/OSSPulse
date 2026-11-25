@@ -50,6 +50,16 @@ python -m alembic current
 
 ## Backup and isolated restore rehearsal for Docker Compose
 
+For a repeatable, destructive-operation-free recovery drill on Windows, run the fixture script from the repository root. It starts its own randomly named temporary PostgreSQL container, writes synthetic data only, verifies a backup restored into a second database, then removes the container and temporary dump:
+
+```powershell
+.\scripts\recovery-drill.ps1
+```
+
+The script does not connect to the Compose database, Neon, or production. A successful run prints `PASS`; a failed check exits with an error. The migration marker is a synthetic fixture and verifies dump/restore fidelity only. It is not a substitute for restoring a real staging backup and comparing the real Alembic revision and report counts.
+
+To run the same recovery drill from a shell with Docker and PowerShell 7 installed, use `pwsh ./scripts/recovery-drill.ps1`.
+
 Create backups outside the repository and protect them as database data. The examples below use a local Compose database and the `.env.local` file from the deployment guide.
 
 ```powershell
@@ -74,7 +84,11 @@ The final command prints the restored report count and Alembic revision. Compare
 docker compose --env-file .env.local -f docker-compose.release.yml exec -T db sh -ec 'dropdb --if-exists -U "$POSTGRES_USER" oss_pulse_restore_check && rm -f /tmp/oss-pulse-backup.dump /tmp/oss-pulse-restore.dump'
 ```
 
-For Neon, use the provider's current point-in-time restore or branch workflow to create an isolated restore target. Point staging at that target, verify readiness and report reads, and keep production on its existing database. Confirm the account's backup retention and recovery-point objective in the provider console; do not assume a default retention period.
+For Neon, use the provider's current point-in-time restore or branch workflow to create an isolated restore target. Point staging at that target, verify readiness and report reads, and keep production on its existing database. Confirm the account's backup retention and recovery-point objective in the provider console; do not assume a default retention period. The disposable script above tests PostgreSQL recovery mechanics but does not verify Neon restore behavior.
+
+## Isolated rollback rehearsal
+
+The CI container job recreates the Compose stack from an empty ephemeral database and checks the app responds. For application rollback, deploy the prior known-good commit to an isolated staging stack using a separate database, then verify health, readiness, a saved report read, and logs. Record both commit SHAs and the result. For schema changes, rollback is allowed only when the previous application version is compatible with the newer schema. Prefer a forward-fix migration if it is not; do not restore or downgrade production data as an application rollback shortcut. No production database rollback was performed as part of this local recovery drill.
 
 ## Incident response
 

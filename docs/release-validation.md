@@ -105,3 +105,11 @@ A fresh read-only analysis of `psf/requests` retained its 67 score, 75% coverage
 - Vercel log queries for the latest 30 minutes returned no matching runtime error or HTTP 5xx records. The account rejected a 24-hour runtime-log query because that window exceeded its available retention. This is a short observation window, not proof of zero incidents.
 - Added the [operations runbook](operations-runbook.md) with health/readiness checks, release and migration order, a local isolated restore rehearsal, Vercel log queries, and incident/rollback steps.
 - Staging analysis persistence, database outage handling, backup restoration, and rollback have not been rehearsed. Those release gates remain open.
+
+## 2026-11-25 maintainer calibration and isolated recovery drill
+
+- Added [`maintainer-calibration.md`](maintainer-calibration.md) with a reviewer prompt, evidence rules, and a confirmation standard requiring two independent maintainers of the same repository to agree on the same report snapshot. Added an empty [`maintainer-calibration.csv`](maintainer-calibration.csv) ledger. No maintainer responses were obtained in this work, so no expected bands are confirmed and no score thresholds were changed.
+- Added `scripts/recovery-drill.ps1`, which creates a randomly named temporary PostgreSQL container, inserts one synthetic report and migration marker, creates a custom-format dump, restores it into a separate disposable database, verifies both records, and removes the temporary container and dump.
+- Executed the recovery drill locally on 2026-11-25. It passed: one synthetic report and `recovery-drill-fixture` were present after restore. The drill did not access the Compose application database, Neon, production, or actual customer reports.
+- Added an isolated staging application rollback procedure and clarified that schema compatibility must be reviewed before rolling application code back.
+- A real staging backup restore, rollback of an application deployment against staging data, and maintainer-confirmed score labels remain open release gates.
