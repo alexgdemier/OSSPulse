@@ -60,6 +60,14 @@ The script does not connect to the Compose database, Neon, or production. A succ
 
 To run the same recovery drill from a shell with Docker and PowerShell 7 installed, use `pwsh ./scripts/recovery-drill.ps1`.
 
+For a full local release rehearsal, run:
+
+```powershell
+.\scripts\staging-rollback-drill.ps1
+```
+
+This script creates an isolated Compose project with its own randomly named database volume and localhost-only ports. It analyzes the supplied public GitHub repository (default: OSS Pulse), verifies the expanded response, restarts the API and retrieves the saved report, restores a real dump into a separate database and compares report counts plus Alembic revision, builds a prior Git commit and rolls the app back against the same temporary data, then restores the current app. It consumes GitHub API quota. A custom `-RepositoryUrl` and `-RollbackRef` may be supplied. Cleanup removes the temporary Compose volume, images, worktree, and dump. This is a local staging rehearsal; it does not test hosted TLS, CDN edge limits, Vercel rollback, Neon point-in-time recovery, or production data.
+
 Create backups outside the repository and protect them as database data. The examples below use a local Compose database and the `.env.local` file from the deployment guide.
 
 ```powershell
