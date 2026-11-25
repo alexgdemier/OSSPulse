@@ -35,6 +35,14 @@ Keep log access limited to operators and avoid copying request payloads or secre
 
 The Vercel project also applies an edge rate rule to POST `/analyze` and `/api/v1/analyze`: five requests per IP per minute. The database-backed application quota is stricter. Vercel uses regional edge counters, so validate from one client and region and inspect `vercel firewall traffic list --project oss-pulse --since 30m --rule <rule-id> --json` for a recorded `rate-limit` action. Do this against Preview, not Production. The project's built-in alert monitor notifies team owners for high-severity events; no Slack or webhook destination is linked. Confirm Vercel owner notification settings before relying on alerts for on-call response.
 
+To compare the current scoring engine across tiny, active, low-churn, archived, large, and monorepo examples, run the read-only repository matrix from the project root:
+
+```powershell
+uv run python scripts/validate-repository-matrix.py
+```
+
+The matrix skips optional issue-response sampling to reduce GitHub API requests. It never saves reports or changes repositories. It records source completeness and classification; do not treat diagnostic values from `Insufficient Data` cases as usable scores. GitHub authentication from the local environment raises the API request limit but is optional.
+
 Production migrations are a separate database operation. Before deploying a schema-changing release, back up the database, apply the migration once from a controlled operator or CI job, verify `/ready`, and then deploy the application. Do not run migrations independently from every serverless instance.
 
 Run the migration from the exact release commit with staging credentials supplied through the job's secret environment, then record the resulting revision:

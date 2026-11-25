@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FindingsList } from "../../../components/findings-list";
+import { ReportShare } from "../../../components/report-share";
 import { getApiBaseUrl } from "../../../lib/api-url";
 
 const apiBase = getApiBaseUrl();
@@ -17,6 +18,7 @@ type Finding = {
 };
 
 type Insight = Finding & { priority_score: number };
+type ScoreFactor = { label: string; weight_percent: number; score: number; observation: string };
 
 type Report = {
   report_id: string;
@@ -40,6 +42,7 @@ type Report = {
     published_releases_last_365_days?: number | null;
   };
   dimensions: Record<string, number | null>;
+  score_breakdown?: Record<string, ScoreFactor[] | null>;
   activity?: {
     commit_activity_last_180_days?: { period_start: string; commits: number }[] | null;
     commits_last_30_days?: number | null;
@@ -73,6 +76,22 @@ const labels: Record<string, string> = {
   development: "Development",
   documentation: "Documentation",
   sustainability: "Sustainability",
+};
+
+const dimensionWeights: Record<string, number> = {
+  maintenance: 30,
+  community: 25,
+  development: 20,
+  documentation: 15,
+  sustainability: 10,
+};
+
+const dimensionExplanations: Record<string, string> = {
+  maintenance: "Looks at the age of open work, unanswered issues, and how long ago the project was updated.",
+  community: "Not scored yet. Public GitHub data cannot reliably tell who is a maintainer, so this part is left out.",
+  development: "Checks whether the main branch contains tests, automated workflows, and development setup files.",
+  documentation: "Checks for a README, a license, contribution instructions, and a documentation folder.",
+  sustainability: "Compares recent commit activity with the previous period and checks the age of the latest release.",
 };
 
 const dataSources = [
@@ -133,6 +152,15 @@ export default async function ReportPage({
         <p className="lead">{report.repository.description ?? "No repository description provided."}</p>
         <div className="repo-meta"><span>{report.repository.language ?? "Language unavailable"}</span><span>{report.repository.stars.toLocaleString()} stars</span><span>{report.repository.forks.toLocaleString()} forks</span></div>
       </header>
+      <ReportShare
+        repository={report.repository.full_name}
+        reportId={report.report_id}
+        engine={report.engine_version}
+        analyzedAt={report.analyzed_at}
+        score={displayScore}
+        coverage={report.coverage}
+        classification={report.classification}
+      />
       <section className="repository-profile" aria-label="Repository profile">
         <div className="report-section-heading"><div><span className="section-label">REPOSITORY PROFILE</span><h2>Project context</h2></div></div>
         <div className="profile-grid">
@@ -150,6 +178,26 @@ export default async function ReportPage({
       <section className="report-grid">
         <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{displayScore ?? "—"}{displayScore !== null && <small>/100</small>}</div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${displayScore ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}{displayScore === null ? " · Total score withheld because coverage is insufficient" : ""}</p></article>
         <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className="dimension" key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div><div className="bar"><i className={score !== null && score >= 70 ? "green" : "amber"} style={{ width: `${score ?? 0}%` }} /></div></div>)}</article>
+      </section>
+      <section className="score-explanation" aria-label="How the score was calculated">
+        <div className="report-section-heading"><div><span className="section-label">WHY THIS RESULT</span><h2>What shaped the score</h2></div></div>
+        <p className="score-explanation-intro">Each category uses the clues listed below. A clue gets a score from 0 to 100, then counts toward its category. Missing information is left out instead of guessed.</p>
+        <div className="score-explanation-grid">
+          {Object.entries(report.dimensions).map(([name, score]) => {
+            const unavailable = report.score_eligibility?.unavailable_dimensions.find((item) => item.dimension === name);
+            const factors = report.score_breakdown?.[name];
+            return <article className="score-explanation-card" key={name}>
+              <div className="score-explanation-heading"><h3>{labels[name] ?? name}</h3><span>{dimensionWeights[name] ?? 0}% of the full score</span></div>
+              <p>{dimensionExplanations[name] ?? "This category is not currently used in the score."}</p>
+              {score === null ? (
+                <p className="score-explanation-missing">{name === "community" ? "Not counted because reliable maintainer data is not available." : `Not counted because ${unavailable?.sources.map((source) => dataSourceNames[source] ?? source).join(" and ") || "the required information"} was incomplete.`}</p>
+              ) : factors?.length ? (
+                <ul>{factors.map((factor) => <li key={factor.label}><div><strong>{factor.label}</strong><span>{factor.observation}</span></div><b>{formatFactorScore(factor.score)} · {formatFactorWeight(factor.weight_percent)} of this category</b></li>)}</ul>
+              ) : <p className="score-explanation-missing">This older report does not contain the details needed to explain each part. Run a new analysis to see them.</p>}
+            </article>;
+          })}
+        </div>
+        <p className="method-note">The overall score uses only categories with complete data. Coverage shows how much of the full score could be checked. A quiet period or missing project detail is a clue to review, not proof that a project is failing.</p>
       </section>
       {report.classification === "Insufficient Data" && report.score_eligibility && (
         <p className="score-eligibility-note" role="status">
@@ -233,6 +281,7 @@ export default async function ReportPage({
       )}
       <section className="report-findings">
         <div className="report-section-heading"><div><span className="section-label">ACTIONABLE FINDINGS</span><h2>What needs attention</h2></div><span className="count">{report.insights.length}</span></div>
+        {report.data_completeness?.issues === false && report.insights.some((item) => item.category === "maintenance") && <p className="score-eligibility-note" role="status">GitHub did not return the full issue and pull request list. The maintenance findings below include only the items that were retrieved and may miss others.</p>}
         {report.insights.length === 0 ? <p className="empty-state">No findings were detected in the available data.</p> : <FindingsList insights={report.insights} />}
       </section>
       <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Analyzed {analyzed}</span><span>Coverage first · Unknown signals stay unknown</span></footer>
@@ -296,4 +345,12 @@ function formatDays(days: number): string {
   if (days < 30) return `${days} days`;
   if (days < 365) return `${Math.floor(days / 30)} months`;
   return `${(days / 365).toFixed(1)} years`;
+}
+
+function formatFactorScore(score: number): string {
+  return `${Math.round(score)}/100`;
+}
+
+function formatFactorWeight(weight: number): string {
+  return `${new Intl.NumberFormat("en", { maximumFractionDigits: 1 }).format(weight)}%`;
 }

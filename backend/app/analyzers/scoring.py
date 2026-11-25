@@ -214,20 +214,124 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             activity = 0.0
         if previous_90:
             activity_trend = round(100 * (len(recent_90) - len(previous_90)) / len(previous_90), 1)
+        release_age_days = (
+            (now - latest_release.published_at).total_seconds() / 86400 if latest_release else None
+        )
         release_score = None
         if snapshot.completeness["releases"]:
             release_score = (
-                _score_age(
-                    (now - latest_release.published_at).total_seconds() / 86400,
-                    180,
-                    730,
-                )
-                if latest_release
-                else 0.0
+                _score_age(release_age_days, 180, 730) if release_age_days is not None else 0.0
             )
         dimensions["sustainability"] = (
             round(0.65 * activity + 0.35 * release_score, 1) if release_score is not None else None
         )
+
+    maintenance_issue_score = 100 * (1 - len(issues_without_comments_30) / max(1, len(open_issues)))
+    reviewable_pr_age_score = _score_age(median_pr_age, 7, 60)
+    push_recency_score = _score_age(push_age, 14, 180)
+    maintenance_factors = [
+        {
+            "label": "Age of reviewable open pull requests",
+            "weight_percent": 45,
+            "score": round(reviewable_pr_age_score, 1),
+            "observation": (
+                f"Median age is {round(median_pr_age, 1)} days across {len(reviewable_prs)} "
+                "reviewable open pull requests."
+                if reviewable_prs
+                else (
+                    "No reviewable open pull requests were found; the current formula treats "
+                    "an empty queue as no waiting work."
+                )
+            ),
+        },
+        {
+            "label": "Open issues without comments for 30 days",
+            "weight_percent": 25,
+            "score": round(maintenance_issue_score, 1),
+            "observation": (
+                f"{len(issues_without_comments_30)} of {len(open_issues)} open issues "
+                "have no comments and are at least 30 days old."
+                if open_issues
+                else (
+                    "No open issues were found; the current formula gives this factor "
+                    "a neutral full score."
+                )
+            ),
+        },
+        {
+            "label": "Time since the last push",
+            "weight_percent": 30,
+            "score": round(push_recency_score, 1),
+            "observation": (
+                f"The last push was about {round(push_age)} days before this report."
+                if snapshot.repository.pushed_at
+                else "GitHub provided no push date; the current formula uses a 181-day fallback."
+            ),
+        },
+    ]
+    development_factors = [
+        {
+            "label": label,
+            "weight_percent": 100 / len(dev_checks),
+            "score": 100.0 if present else 0.0,
+            "observation": "Found on the default branch."
+            if present
+            else "Not found on the default branch.",
+        }
+        for label, present in zip(
+            ("Automated workflows", "Test files", "Development configuration"), dev_checks
+        )
+    ]
+    documentation_factors = [
+        {
+            "label": label,
+            "weight_percent": weight,
+            "score": 100.0 if present else 0.0,
+            "observation": "Found on the default branch."
+            if present
+            else "Not found on the default branch.",
+        }
+        for label, present, weight in zip(
+            ("README", "License", "Contribution guide", "Documentation directory"),
+            doc_checks,
+            doc_weights,
+        )
+    ]
+    sustainability_factors = []
+    if snapshot.completeness["commits"] and snapshot.completeness["releases"]:
+        if recent_90 and not previous_90:
+            activity_score = 100.0
+        elif previous_90:
+            activity_score = max(0.0, min(100.0, 100 * len(recent_90) / len(previous_90)))
+        else:
+            activity_score = 0.0
+        sustainability_factors = [
+            {
+                "label": "Commit activity compared with the previous 90 days",
+                "weight_percent": 65,
+                "score": round(activity_score, 1),
+                "observation": (
+                    f"{len(recent_90)} commits in the latest 90 days and "
+                    f"{len(previous_90)} in the 90 days before that."
+                ),
+            },
+            {
+                "label": "Age of the latest published release",
+                "weight_percent": 35,
+                "score": round(release_score, 1),
+                "observation": (
+                    f"The latest release was about {round(release_age_days)} days old."
+                    if latest_release
+                    else "No published release was found in the complete release history."
+                ),
+            },
+        ]
+    score_breakdown = {
+        "maintenance": maintenance_factors if dimensions["maintenance"] is not None else None,
+        "development": development_factors if dimensions["development"] is not None else None,
+        "documentation": documentation_factors if dimensions["documentation"] is not None else None,
+        "sustainability": sustainability_factors or None,
+    }
 
     evaluable = {
         name: score
@@ -514,6 +618,7 @@ def build_report(snapshot: RepositorySnapshot) -> dict[str, Any]:
             "unavailable_dimensions": unavailable_dimensions,
         },
         "dimensions": dimensions,
+        "score_breakdown": score_breakdown,
         "data_completeness": snapshot.completeness,
         "activity": {
             "commit_activity_last_180_days": activity_periods,

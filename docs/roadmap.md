@@ -42,7 +42,8 @@ Complete the [release checklist](release-checklist.md), validate a staging deplo
 - [x] Execute a full local isolated Compose rehearsal for analysis, API restart persistence, real backup restore, and previous-version rollback.
 - [x] Add Python dependency auditing to CI and require both dependency audit and recovery drill in protected-branch checks.
 - [x] Add a voluntary maintainer calibration issue form with role evidence and review consent.
-- [ ] Collect maintainer-reviewed reference tiers; no score band is confirmed until two independent maintainers assess the same snapshot.
+- [x] Add in-report explanations for the exact signals used in each score.
+- [x] Add a shareable report review summary and a repeatable diverse-repository validation matrix.
 - [x] Validate hosted TLS, readiness, analysis quota, database failure/recovery, Neon point-in-time restore, cross-deployment persistence, and prior-commit rollback against an isolated Neon Free staging project and Vercel Preview.
 - [x] Verify Neon Free autosuspension and cold resume; `/ready` succeeded after the endpoint had been idle for over five minutes.
 - [x] Publish and verify the Vercel WAF rate rule against isolated Preview traffic; add automated coverage for GitHub 403/429 classification and retry guidance.

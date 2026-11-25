@@ -429,6 +429,14 @@ def test_scoring_does_not_turn_missing_data_into_zero():
     assert report["dimensions"]["sustainability"] is None
     assert report["coverage"] == 35
     assert report["classification"] == "Insufficient Data"
+    assert report["score_breakdown"]["maintenance"] is None
+    assert report["score_breakdown"]["sustainability"] is None
+    documentation_factors = report["score_breakdown"]["documentation"]
+    assert len(documentation_factors) == 4
+    assert documentation_factors[0]["observation"] == "Found on the default branch."
+    assert sum(
+        item["score"] * item["weight_percent"] / 100 for item in documentation_factors
+    ) == pytest.approx(report["dimensions"]["documentation"])
 
 
 def test_open_issue_without_comments_produces_careful_finding():
@@ -543,6 +551,11 @@ def test_complete_commit_windows_report_activity_decline():
     assert report["activity"]["commit_activity_change_percent"] == -75.0
     assert report["activity"]["active_commit_authors_last_90_days"] == 1
     assert decline["evidence"]["latest_90_days"] == 1
+    for dimension in ("maintenance", "development", "documentation", "sustainability"):
+        factors = report["score_breakdown"][dimension]
+        assert factors
+        factor_score = sum(item["score"] * item["weight_percent"] / 100 for item in factors)
+        assert factor_score == pytest.approx(report["dimensions"][dimension], abs=0.1)
 
 
 def test_stale_pull_request_detection_skips_drafts_and_waiting_labels():
