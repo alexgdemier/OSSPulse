@@ -5,6 +5,7 @@ import httpx
 import pytest
 from app.analyzers.scoring import build_report
 from app.cli import parse_repository_url
+from app.core.config import Settings
 from app.database.models import AnalysisReport, DimensionScore, Finding, Insight, Repository
 from app.database.repository import (
     get_report,
@@ -238,6 +239,68 @@ def test_github_client_normalizes_snapshot_and_calls_central_api():
     assert "until" in commit_request.url.params
 
 
+def test_github_client_scores_a_complete_bounded_sample_with_more_issues_than_sample(
+    monkeypatch,
+):
+    now = datetime.now(UTC)
+    repo = {
+        "id": 1,
+        "full_name": "owner/repo",
+        "name": "repo",
+        "html_url": "https://github.com/owner/repo",
+        "created_at": now.isoformat(),
+        "updated_at": now.isoformat(),
+        "pushed_at": now.isoformat(),
+        "stargazers_count": 3,
+        "forks_count": 1,
+        "watchers_count": 3,
+        "open_issues_count": 6,
+        "default_branch": "main",
+        "owner": {"login": "owner"},
+    }
+    raw_issues = [
+        {
+            "number": number,
+            "html_url": f"https://github.com/owner/repo/issues/{number}",
+            "title": f"Issue {number}",
+            "state": "open",
+            "created_at": (now - timedelta(days=number)).isoformat(),
+            "updated_at": now.isoformat(),
+            "comments": 0,
+        }
+        for number in range(1, 7)
+    ]
+
+    def handler(request):
+        path = request.url.path
+        if path.endswith("/repos/owner/repo"):
+            return httpx.Response(200, json=repo)
+        if path.endswith("/issues"):
+            return httpx.Response(200, json=raw_issues)
+        if path.endswith("/commits") or path.endswith("/releases"):
+            return httpx.Response(200, json=[])
+        if path.endswith("/git/trees/main"):
+            return httpx.Response(200, json={"truncated": False, "tree": []})
+        return httpx.Response(404, json={"message": "Not found"})
+
+    monkeypatch.setattr(
+        "app.integrations.github.client.settings.github_issue_response_sample_size",
+        5,
+    )
+    snapshot = GitHubClient(transport=httpx.MockTransport(handler)).analyze("owner", "repo")
+
+    assert len(snapshot.issues) == 6
+    assert snapshot.completeness["issues"] is True
+    assert snapshot.completeness["issue_response_sample"] is True
+    assert sum(issue.response_history_complete is True for issue in snapshot.issues) == 5
+    assert build_report(snapshot)["dimensions"]["community"] is not None
+
+
+def test_default_github_pagination_limit_is_ten_pages(monkeypatch):
+    monkeypatch.delenv("GITHUB_MAX_PAGES", raising=False)
+    assert Settings(_env_file=None).github_max_pages == 10
+
+
 def test_github_client_marks_bounded_pagination_incomplete(monkeypatch):
     monkeypatch.setattr("app.integrations.github.client.settings.github_max_pages", 2)
     calls = []
@@ -295,6 +358,7 @@ def test_github_client_marks_bounded_pagination_incomplete(monkeypatch):
     issue_pages = [call for call in calls if call.url.path.endswith("/issues")]
     assert [call.url.params["page"] for call in issue_pages] == ["1"]
     assert snapshot.completeness["issues"] is False
+    assert snapshot.completeness["issue_response_sample"] is False
 
 
 def test_404_is_normalized():

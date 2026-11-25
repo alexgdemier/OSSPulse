@@ -4,6 +4,13 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Incomplete data handling
+
+- Raise the default GitHub pagination limit from three to ten pages (300 to 1,000 records) while keeping it configurable.
+- Treat Community's bounded five-issue sample as complete when issue pagination and all selected reply histories are complete, even when the repository has more than five open issues.
+- Explain which retrieval cap caused a data source or score dimension to be omitted.
+- Increment the report engine and API/web package versions to `0.4.1-alpha` so cached reports are refreshed.
+
 ### Community scoring
 
 - Score the share and response speed of repository-associated replies to open issues when the bounded response sample is complete.
@@ -47,7 +54,7 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 ### Maintainer response evidence
 
 - Add a bounded sample of issue replies that GitHub associates with an owner, organization member, or collaborator.
-- Show sample size, observed response count, median response time, and whether all fetched open issues were covered.
+- At the time, show sample size, observed response count, median response time, and whether all fetched open issues were covered.
 - At the time, keep response evidence descriptive and outside the Health Score because GitHub association does not verify maintainer status; Community scoring was added in `0.4.0-alpha`.
 - Increment the scoring and report engine version to `0.2.3-alpha`.
 

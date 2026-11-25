@@ -95,11 +95,11 @@ const dimensionExplanations: Record<string, string> = {
 };
 
 const dataSources = [
-  { key: "issues", label: "Issues & pull requests", detail: "Open and closed work items" },
-  { key: "commits", label: "Commit history", detail: "Activity windows and attributed authors" },
+  { key: "issues", label: "Issues & pull requests", detail: "Open issues and pull requests" },
+  { key: "commits", label: "Commit history", detail: "Recent activity windows and attributed authors" },
   { key: "releases", label: "Releases", detail: "Published release history" },
   { key: "repository_tree", label: "Default branch files", detail: "Project and documentation signals" },
-  { key: "issue_response_sample", label: "Issue response sample", detail: "Capped issue sample; association is only a proxy" },
+  { key: "issue_response_sample", label: "Issue response sample", detail: "Up to five checked issues; GitHub association is only a proxy" },
 ] as const;
 
 const dataSourceNames: Record<string, string> = {
@@ -108,6 +108,14 @@ const dataSourceNames: Record<string, string> = {
   commits: "commit history",
   releases: "release history",
   repository_tree: "default branch files",
+};
+
+const incompleteDataDetails: Record<string, string> = {
+  issues: "GitHub did not provide the full issue listing within the configured page limit. Issue-dependent scores and counts are omitted to avoid using a partial backlog.",
+  commits: "GitHub did not provide the full commit history within the configured page limit. Sustainability is omitted rather than calculated from a partial activity window.",
+  releases: "GitHub did not provide the full release history within the configured page limit. Release-dependent sustainability is omitted.",
+  repository_tree: "GitHub truncated the default-branch file list. File-based dimensions are omitted rather than scored from partial results.",
+  issue_response_sample: "At least one selected issue's reply history could not be fully checked. Community is omitted rather than scored from partial replies.",
 };
 
 export default async function ReportPage({
@@ -133,6 +141,10 @@ export default async function ReportPage({
   }
   const report = payload;
   const displayScore = report.classification === "Insufficient Data" ? null : report.health_score;
+  const engineVersion = report.engine_version.match(/^(\d+)\.(\d+)/);
+  const communityScoringAvailable = engineVersion
+    ? Number(engineVersion[1]) > 0 || Number(engineVersion[2]) >= 4
+    : false;
 
   const analyzed = new Date(report.analyzed_at).toLocaleString("en", {
     year: "numeric",
@@ -178,7 +190,7 @@ export default async function ReportPage({
       </section>
       <section className="report-grid">
         <article className="report-card main-score"><span className="section-label">HEALTH SCORE</span><div className="report-score">{displayScore ?? "—"}{displayScore !== null && <small>/100</small>}</div><span className="report-status">{report.classification}</span><div className="score-track"><i style={{ width: `${displayScore ?? 0}%` }} /></div><p>{report.coverage}% data coverage · Engine {report.engine_version}{displayScore === null ? " · Total score withheld because coverage is insufficient" : ""}</p></article>
-        <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className={`dimension${name === "community" && score === null ? " dimension-unscored" : ""}`} key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div>{score === null ? <p>{name === "community" ? "A complete sample with open issues is required." : "Required data is incomplete."}</p> : <div className="bar"><i className={score >= 70 ? "green" : "amber"} style={{ width: `${score}%` }} /></div>}</div>)}</article>
+        <article className="report-card dimension-card"><span className="section-label">HEALTH DIMENSIONS</span>{Object.entries(report.dimensions).map(([name, score]) => <div className={`dimension${name === "community" && score === null ? " dimension-unscored" : ""}`} key={name}><div><span>{labels[name] ?? name}</span><b>{score === null ? "Not evaluated" : score}</b></div>{score === null ? <p>{name === "community" ? communityScoringAvailable ? "A complete sample with open issues is required." : "Not scored by this report's engine version." : "Required data is incomplete."}</p> : <div className="bar"><i className={score >= 70 ? "green" : "amber"} style={{ width: `${score}%` }} /></div>}</div>)}</article>
       </section>
       <section className="score-explanation" aria-label="How the score was calculated">
         <div className="report-section-heading"><div><span className="section-label">WHY THIS RESULT</span><h2>What shaped the score</h2></div></div>
@@ -188,10 +200,10 @@ export default async function ReportPage({
             const unavailable = report.score_eligibility?.unavailable_dimensions.find((item) => item.dimension === name);
             const factors = report.score_breakdown?.[name];
             return <article className="score-explanation-card" key={name}>
-              <div className="score-explanation-heading"><h3>{labels[name] ?? name}</h3><span>{`${dimensionWeights[name] ?? 0}% of the full score`}</span></div>
-              <p>{dimensionExplanations[name] ?? "This category is not currently used in the score."}</p>
+              <div className="score-explanation-heading"><h3>{labels[name] ?? name}</h3><span>{name === "community" && !communityScoringAvailable ? "Reserved · excluded from score" : `${dimensionWeights[name] ?? 0}% of the full score`}</span></div>
+              <p>{name === "community" && !communityScoringAvailable ? "This report was created before Community became a score dimension." : dimensionExplanations[name] ?? "This category is not currently used in the score."}</p>
               {score === null ? (
-                <p className="score-explanation-missing">{name === "community" ? "Not counted because the issue response sample did not cover all open issues, or there were no issues available to evaluate. A repository-associated GitHub account is only a proxy for project involvement." : `Not counted because ${unavailable?.sources.map((source) => dataSourceNames[source] ?? source).join(" and ") || "the required information"} was incomplete.`}</p>
+                <p className="score-explanation-missing">{name === "community" ? communityScoringAvailable ? report.activity?.repository_associated_response_sampled === 0 && report.activity?.open_issues !== 0 ? "No issues were selected for the response sample, so Community could not be evaluated. A repository-associated GitHub account is only a proxy for project involvement." : "Not counted because issue pagination or a selected reply history was incomplete, or no open issues were available to evaluate. A repository-associated GitHub account is only a proxy for project involvement." : "This category was reserved and excluded from the score when this report was created." : `Not counted because ${unavailable?.sources.map((source) => dataSourceNames[source] ?? source).join(" and ") || "the required information"} was incomplete.`}</p>
               ) : factors?.length ? (
                 <ul>{factors.map((factor) => <li key={factor.label}><div><strong>{factor.label}</strong><span>{factor.observation}</span></div><b>{formatFactorScore(factor.score)} · {formatFactorWeight(factor.weight_percent)} of this category</b></li>)}</ul>
               ) : <p className="score-explanation-missing">This older report does not contain the details needed to explain each part. Run a new analysis to see them.</p>}
@@ -211,8 +223,19 @@ export default async function ReportPage({
         <div className="report-section-heading"><div><span className="section-label">DATA AVAILABILITY</span><h2>Sources used in this report</h2></div></div>
         <div className="data-source-grid">{dataSources.map((source) => {
           const complete = report.data_completeness?.[source.key];
-          const status = complete === undefined ? "Unknown" : complete ? "Complete" : "Incomplete";
-          return <article className="data-source" key={source.key}><div><strong>{source.label}</strong><span className={`data-status ${complete === undefined ? "unknown" : complete ? "complete" : "incomplete"}`}>{status}</span></div><p>{source.detail}</p></article>;
+          const sampleEmpty = source.key === "issue_response_sample"
+            && report.data_completeness?.issues === true
+            && report.activity?.repository_associated_response_sampled === 0;
+          const status = sampleEmpty ? "No sample" : complete === undefined ? "Unknown" : complete ? "Complete" : "Incomplete";
+          const detail = sampleEmpty
+            ? report.activity?.open_issues === 0
+              ? "No open issues were available, so Community has no observations."
+              : "No issues were selected for the response sample, so Community is omitted."
+            : source.key === "issue_response_sample" && report.data_completeness?.issues === false
+            ? "The open-issue listing is incomplete, so Community is omitted."
+            : complete === false ? incompleteDataDetails[source.key] ?? source.detail : source.detail;
+          const statusClass = sampleEmpty || complete === undefined ? "unknown" : complete ? "complete" : "incomplete";
+          return <article className="data-source" key={source.key}><div><strong>{source.label}</strong><span className={`data-status ${statusClass}`}>{status}</span></div><p>{detail}</p></article>;
         })}</div>
       </section>}
       <section className="activity-summary" aria-label="Repository activity summary">
@@ -276,7 +299,7 @@ export default async function ReportPage({
             </article>
           </div>
           <p className="method-note">
-            Checked {report.activity.repository_associated_response_sampled} selected open issues. “Associated” uses GitHub’s OWNER, MEMBER, or COLLABORATOR label; it does not verify maintainer status. This sample is descriptive and does not affect the health score. No observed reply does not prove an issue was unseen.
+            Checked {report.activity.repository_associated_response_sampled} selected open issues. {communityScoringAvailable ? "A complete sample contributes to Community; a partial sample is excluded." : "This sample is descriptive and did not affect the score in this report's engine version."} “Associated” uses GitHub’s OWNER, MEMBER, or COLLABORATOR label as a proxy and does not verify maintainer status. No observed reply does not prove an issue was unseen.
           </p>
         </section>
       )}

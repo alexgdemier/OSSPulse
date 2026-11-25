@@ -119,7 +119,7 @@ class GitHubClient:
         headers = {
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "OSS-Pulse/0.4.0-alpha",
+            "User-Agent": "OSS-Pulse/0.4.1-alpha",
         }
         if self._token:
             headers["Authorization"] = f"Bearer {self._token}"
@@ -246,7 +246,6 @@ class GitHubClient:
                 "issues": issues_complete,
                 "issue_response_sample": (
                     issues_complete
-                    and len(eligible_response_issues) <= len(response_sample)
                     and response_lookups_complete
                     and all(issue.response_history_complete is True for issue in response_sample)
                 ),

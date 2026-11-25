@@ -8,7 +8,7 @@ OSS Pulse can be deployed from this GitHub monorepo as a Vercel Services project
 - A PostgreSQL database and its connection URL. Vercel no longer provides a first-party PostgreSQL database; providers are available through its Marketplace. Review the provider's current plan and usage limits before creating a database.
 - `DATABASE_URL` configured for SQLAlchemy's `postgresql+pg8000` driver.
 
-The Vercel API service reads `DATABASE_URL`, `DATABASE_SSL`, `GITHUB_TOKEN`, `GITHUB_MAX_PAGES`, `GITHUB_TIMEOUT_SECONDS`, `GITHUB_ISSUE_RESPONSE_SAMPLE_SIZE`, analysis limits, cache and retention settings, and `ANALYSIS_PROXY_SECRET` from its environment. Set `DATABASE_SSL=true` for hosted PostgreSQL providers that require TLS. Keep all database credentials, proxy-signing secrets, and GitHub tokens in Vercel's environment settings, never in Git.
+The Vercel API service reads `DATABASE_URL`, `DATABASE_SSL`, `GITHUB_TOKEN`, `GITHUB_MAX_PAGES`, `GITHUB_TIMEOUT_SECONDS`, `GITHUB_ISSUE_RESPONSE_SAMPLE_SIZE`, analysis limits, cache and retention settings, and `ANALYSIS_PROXY_SECRET` from its environment. GitHub pagination defaults to ten pages (1,000 records) per list and can be configured from one to twenty pages; incomplete sources remain excluded from affected dimensions. Set `DATABASE_SSL=true` for hosted PostgreSQL providers that require TLS. Keep all database credentials, proxy-signing secrets, and GitHub tokens in Vercel's environment settings, never in Git.
 
 ## Project configuration
 
