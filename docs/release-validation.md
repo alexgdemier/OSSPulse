@@ -92,6 +92,23 @@ The five complete-coverage cases in this review plus `encode/httpx` (72) and `pa
 
 This distribution describes what the current formula outputs; it does not validate whether a repository with a given score deserves that label. There is no independently reviewed expected tier for these projects, no Critical case, and only one At Risk and one Needs Attention case. Do not move the numerical band boundaries to fit this sample. Stable calibration needs maintainer-reviewed expected tiers, including mature low-churn libraries and projects with known backlogs.
 
+## 2026-11-25 expanded current-engine repository matrix
+
+Added `scripts/validate-repository-matrix.py` to repeat read-only checks across tiny, active, low-churn, archived, large, and monorepo examples. The script skips optional issue-response sampling to reduce GitHub API use, saves no reports, and outputs source completeness with every score.
+
+The first run used engine `0.3.3-alpha`; no reports were saved and no repositories were changed. Incomplete inputs are explicitly marked below; their API diagnostic values are not classifications and must not be treated as valid scores.
+
+| Scenario | Repository | API diagnostic score | Coverage | Classification | Issues | Commits | Releases | Tree |
+|---|---|---:|---:|---|---|---|---|---|
+| Tiny, very large issue queue | `octocat/Hello-World` | 10 | 45% | Insufficient Data | Incomplete | Complete | Complete | Complete |
+| Small, active | `pallets/click` | 91 | 75% | Excellent | Complete | Complete | Complete | Complete |
+| Mature, low-churn | `pallets/itsdangerous` | 45 | 75% | At Risk | Complete | Complete | Complete | Complete |
+| Archived | `adobe/brackets` | 56 | 45% | Insufficient Data | Incomplete | Complete | Complete | Complete |
+| Very large, active | `huggingface/transformers` | 100 | 35% | Insufficient Data | Incomplete | Incomplete | Complete | Complete |
+| Large monorepo | `vercel/next.js` | 100 | 35% | Insufficient Data | Incomplete | Incomplete | Incomplete | Complete |
+
+The tiny repository's unusually large issue queue exceeded the fetch cap; the archived project's issue source was also incomplete. The two large projects exceeded issue/commit page limits (and release limits for `vercel/next.js`). All four incomplete cases withheld the total score in the web classification, despite high or low diagnostic API values. The active small repository and the low-churn case had complete score inputs. The low-churn `At Risk` result is still an unconfirmed engine output, not a maintainer verdict. Repeat the matrix before stable release and compare any changed completeness or classification with the saved point-in-time record.
+
 ### Age-only severity adjustment in `0.3.2-alpha`
 
 The sampled records included old documentation and typing pull requests, a documentation issue, and a title-formatting issue. Their age/no-comment predicates were accurate, but the available metadata did not establish critical or high software impact. The engine now labels 14-day no-comment issues `low`, 30-day no-comment issues `medium`, 30-day stale pull requests `medium`, and 60-day stale pull requests `high`. This changes finding severity and recommendation priority, not Health Score values or score bands.
