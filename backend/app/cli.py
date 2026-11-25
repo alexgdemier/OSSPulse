@@ -41,7 +41,7 @@ def main() -> None:
     except GitHubAPIError as exc:
         if exc.status_code == 404:
             message = "Repository not found or not publicly accessible."
-        elif exc.status_code in (403, 429):
+        elif exc.is_rate_limit:
             message = "GitHub rate limit reached. Set GITHUB_TOKEN for a higher limit."
             if exc.reset_at:
                 message += f" Reset time (UTC epoch): {exc.reset_at}."

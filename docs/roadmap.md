@@ -45,7 +45,9 @@ Complete the [release checklist](release-checklist.md), validate a staging deplo
 - [ ] Collect maintainer-reviewed reference tiers; no score band is confirmed until two independent maintainers assess the same snapshot.
 - [x] Validate hosted TLS, readiness, analysis quota, database failure/recovery, Neon point-in-time restore, cross-deployment persistence, and prior-commit rollback against an isolated Neon Free staging project and Vercel Preview.
 - [x] Verify Neon Free autosuspension and cold resume; `/ready` succeeded after the endpoint had been idle for over five minutes.
-- [ ] Publish and test the Vercel WAF rate rule after human approval, then verify automated monitoring and hosted GitHub 403/429 handling.
+- [x] Publish and verify the Vercel WAF rate rule against isolated Preview traffic; add automated coverage for GitHub 403/429 classification and retry guidance.
+- [ ] Confirm Vercel alert delivery to an operator and perform a live hosted GitHub rate-limit exercise without exhausting a shared GitHub quota.
+- [ ] Collect maintainer-reviewed reference tiers; no score band is confirmed until two independent maintainers assess the same snapshot.
 
 ## Phase 4 — Adoption (days 24–30)
 

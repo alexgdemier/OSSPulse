@@ -138,8 +138,12 @@ def analyze(
             raise HTTPException(
                 status_code=404, detail="Repository not found or inaccessible"
             ) from exc
-        if exc.status_code in (403, 429):
-            raise HTTPException(status_code=429, detail="GitHub API rate limit reached") from exc
+        if exc.is_rate_limit:
+            raise HTTPException(
+                status_code=429,
+                detail="GitHub API rate limit reached",
+                headers={"Retry-After": str(exc.retry_after_seconds or 60)},
+            ) from exc
         if exc.status_code >= 500:
             raise HTTPException(
                 status_code=502, detail="GitHub is temporarily unavailable"

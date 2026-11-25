@@ -33,6 +33,8 @@ Keep log access limited to operators and avoid copying request payloads or secre
 5. Restart the staging API service and confirm the saved report is still retrievable. Exercise rate limits and GitHub `403`/`429` handling in staging only; confirm `Retry-After` is present on rate-limit responses.
 6. Record the deployed commit, migration revision, smoke-check outcome, and rollback target in the release record.
 
+The Vercel project also applies an edge rate rule to POST `/analyze` and `/api/v1/analyze`: five requests per IP per minute. The database-backed application quota is stricter. Vercel uses regional edge counters, so validate from one client and region and inspect `vercel firewall traffic list --project oss-pulse --since 30m --rule <rule-id> --json` for a recorded `rate-limit` action. Do this against Preview, not Production. The project's built-in alert monitor notifies team owners for high-severity events; no Slack or webhook destination is linked. Confirm Vercel owner notification settings before relying on alerts for on-call response.
+
 Production migrations are a separate database operation. Before deploying a schema-changing release, back up the database, apply the migration once from a controlled operator or CI job, verify `/ready`, and then deploy the application. Do not run migrations independently from every serverless instance.
 
 Run the migration from the exact release commit with staging credentials supplied through the job's secret environment, then record the resulting revision:
