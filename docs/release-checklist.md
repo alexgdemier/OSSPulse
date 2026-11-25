@@ -21,19 +21,20 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [x] Document operator checks, backup/restore rehearsal, incident response, and rollback in the [operations runbook](operations-runbook.md).
 - [x] Add a disposable local PostgreSQL recovery-drill script that verifies backup and restore without accessing application or production data.
 - [x] Run the synthetic recovery drill and the full isolated local Compose rehearsal: analysis, persistence after API restart, real backup restore, and application rollback.
-- [ ] Rehearse backup restoration and application rollback against a separately provisioned hosted staging database; local drills do not validate Neon point-in-time restore or hosted settings.
+- [ ] Rehearse backup restoration and application rollback against a separately provisioned hosted staging database; local drills do not validate Neon point-in-time restore or hosted settings. A separate free Neon staging project is provisioned and migrated over verified TLS; restore and rollback have not yet been exercised there.
 - [x] Verify production `/api/v1/health` and `/api/v1/ready` on 2026-11-24; both returned HTTP 200.
 - [ ] Deploy the same commit to staging with isolated PostgreSQL, TLS, edge rate limits, backups, and monitoring; rehearse restore and rollback.
 - [x] Provide reproducible API and web container builds plus a self-hosted Compose release stack with migrations and health-gated startup.
 - [x] Verify local isolated Compose analysis, report persistence across API restart, report retrieval, backup restoration, and application rollback.
 - [ ] Verify hosted staging TLS, edge rate limits, GitHub rate limits, and database outage behavior.
+- [x] Add a voluntary maintainer calibration issue form with public-role evidence and consent language; no reviews have been received or marked confirmed.
 - [x] Enable Dependabot alerts and automated security fixes; verify secret scanning and push protection; confirm clean `npm audit` in CI.
 - [x] Align Python, API, scoring engine, and web versions at `0.3.3-alpha`; update release notes and the changelog.
 - [ ] Tag the validated commit and publish installation, deployment, and support instructions.
 
 ## Current release status
 
-The project remains at `0.3.3-alpha`. Point-in-time validation covers sixteen public repositories; seven have complete score coverage, but none has an independent maintainer-provided reference tier, so the score bands remain provisional. Age-only finding severities were reduced and repository reports now include additional descriptive context. CI passes backend tests across Python 3.11–3.14, migrations, web checks, containers, recovery drill, and Python dependency audit. Dependabot alerts, automated fixes, secret scanning, and push protection are enabled. A local isolated Compose rehearsal has verified analysis, persistence after API restart, real backup restoration, and rollback to the prior app version. Hosted staging with TLS, edge controls, failure injection, and Neon point-in-time recovery remain open, as does maintainer-confirmed scoring calibration. Do not call the scoring stable until maintainers have reviewed the reference cases.
+The project remains at `0.3.3-alpha`. Point-in-time validation covers sixteen public repositories; seven have complete score coverage, but none has an independent maintainer-provided reference tier, so the score bands remain provisional. Age-only finding severities were reduced and repository reports now include additional descriptive context. CI passes backend tests across Python 3.11–3.14, migrations, web checks, containers, recovery drill, and Python dependency audit. Dependabot alerts, automated fixes, secret scanning, and push protection are enabled. A local isolated Compose rehearsal has verified analysis, persistence after API restart, real backup restoration, and rollback to the prior app version. A separate, empty Neon Free staging project has been provisioned with a 0.25 CU endpoint and the current migrations applied over verified TLS. Hosted Preview analysis, autosuspend observation, edge limits, outage handling, restore, and rollback remain to be tested. The new voluntary review form is ready, but maintainer-confirmed calibration remains open until real responses arrive. Do not call the scoring stable until maintainers have reviewed the reference cases and hosted staging gates have passed.
 
 ## Tooling follow-up
 

@@ -1,0 +1,79 @@
+name: Maintainer score calibration
+description: Voluntarily review one OSS Pulse report for score and finding accuracy
+title: "Maintainer calibration: <owner>/<repository>"
+labels:
+  - maintainer-calibration
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submit only if you are a repository maintainer or maintainer-approved reviewer and are comfortable with a public GitHub issue that identifies your account. Do not include private contact details, credentials, security reports, or confidential project information. Reviews remain pending until independently confirmed by a second maintainer for the same report snapshot.
+  - type: input
+    id: repository
+    attributes:
+      label: Repository URL
+      description: Public GitHub repository reviewed.
+      placeholder: https://github.com/owner/repository
+    validations:
+      required: true
+  - type: input
+    id: report
+    attributes:
+      label: Report ID and report date
+      description: Identify the exact OSS Pulse snapshot.
+    validations:
+      required: true
+  - type: input
+    id: engine
+    attributes:
+      label: Engine version
+    validations:
+      required: true
+  - type: input
+    id: role_evidence
+    attributes:
+      label: Public evidence of your maintainer role
+      description: Link to a public page, release, commit, or repository role that supports your relationship to this project.
+    validations:
+      required: true
+  - type: dropdown
+    id: expected_band
+    attributes:
+      label: Expected maintenance health
+      options:
+        - Excellent
+        - Healthy
+        - Needs Attention
+        - At Risk
+        - Critical
+        - Insufficient context to decide
+    validations:
+      required: true
+  - type: textarea
+    id: false_positives
+    attributes:
+      label: Findings that are contextual or incorrect
+      description: Include finding IDs and brief rationale. Write “None observed” if applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: false_negatives
+    attributes:
+      label: Important issues the report missed
+      description: Briefly describe missing context or signals. Do not disclose vulnerabilities.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Project context that affects the assessment
+      description: For example, support policy, planned maintenance pause, release cadence, or backlog triage practices.
+    validations:
+      required: true
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Review consent
+      options:
+        - label: I understand this review is public, voluntary, and will be treated as pending until independently confirmed.
+          required: true

@@ -130,3 +130,11 @@ A fresh read-only analysis of `psf/requests` retained its 67 score, 75% coverage
 - Built the previous application revision (`8b4fdab`) and rolled the API and web containers back against the isolated database. The previous version passed readiness and retrieved/rendered the report. The current version was then restored successfully.
 - The drill removed its temporary Compose volume, images, worktree, and backup. It did not touch the user's local Compose volume, Neon, production, TLS, edge rate limits, or hosted staging.
 - Hosted staging with TLS/edge controls, outage/rate-limit failure injection, and Neon point-in-time recovery remain open. Maintainer-confirmed score bands also remain open.
+
+## 2026-11-25 hosted staging provisioned
+
+- Created a separate, empty Neon Free project `oss-pulse-staging-20261125` in `aws-eu-central-1`, with compute capped at 0.25 CU. It is independent of the production database; no production data was copied or changed.
+- Applied migrations `0001_initial`, `0002_finding_uniqueness`, and `0003_analysis_abuse_protection` from the current commit using certificate-verified TLS. Connection details were supplied in memory and were not added to the repository or logs.
+- Neon reports `suspend_timeout_seconds: 0`, which delegates to the plan default. The Free plan documents automatic suspension after five minutes of inactivity; endpoint suspension still needs to be observed after hosted checks.
+- The separate Vercel Preview environment and branch-specific database secret are not yet active. Hosted smoke tests, analysis persistence, limits, database failure behavior, point-in-time restore, and rollback remain open until the Preview branch deployment is ready.
+- Maintainer calibration is still unconfirmed: the calibration ledger is empty and no expected bands or false-positive judgments have been fabricated.

@@ -41,7 +41,9 @@ Complete the [release checklist](release-checklist.md), validate a staging deplo
 - [x] Add an isolated disposable PostgreSQL backup/restore drill and staging rollback procedure.
 - [x] Execute a full local isolated Compose rehearsal for analysis, API restart persistence, real backup restore, and previous-version rollback.
 - [x] Add Python dependency auditing to CI and require both dependency audit and recovery drill in protected-branch checks.
-- [ ] Collect maintainer-reviewed reference tiers and rehearse TLS, edge limits, failure recovery, and provider point-in-time restore in hosted staging.
+- [x] Add a voluntary maintainer calibration issue form with role evidence and review consent.
+- [ ] Collect maintainer-reviewed reference tiers; the first review remains unconfirmed until two independent maintainers assess the same snapshot.
+- [ ] Rehearse TLS, edge limits, failure recovery, and provider point-in-time restore in hosted staging. The current Neon Free project rejected five-minute compute autosuspend configuration, so no hosted staging resources were created.
 
 ## Phase 4 — Adoption (days 24–30)
 

@@ -123,3 +123,21 @@ Check `/ready`, the `DATABASE_URL` target, and whether the service uses a persis
 - `/health`, `/ready`, analysis, report retrieval/history, API restart persistence, quota behavior, and database/GitHub failure responses have recorded staging results.
 - A backup has been restored to an isolated target and its report count and migration revision verified.
 - A rollback target and the schema compatibility decision are recorded for the release.
+
+## Hosted staging setup and validation
+
+Use the Git branch `codex/stable-release-staging` as the Vercel Preview target and a separate, empty Neon project named `oss-pulse-staging` for its database. Do not use the Production environment or point Preview at the production database. Provision the smallest available compute and use the Free plan's default automatic suspension. A suspend timeout of `0` means Neon applies the plan default (five minutes on the current Free plan); verify the endpoint suspends after the first staging checks. If the endpoint is configured never to suspend or the Free plan default is unavailable, stop and remove the project instead of leaving compute running.
+
+Configure `DATABASE_URL`, `DATABASE_SSL=true`, `ANALYSIS_RATE_LIMIT_ENABLED=true`, `ANALYSIS_RATE_LIMIT_PER_MINUTE=2`, and `ANALYSIS_RATE_LIMIT_PER_HOUR=10` as **branch-specific Preview secrets** for `codex/stable-release-staging`. Keep proxy trust and proxy signing secrets aligned with the Vercel deployment. Apply Alembic migrations once from the tested commit using the staging URL, then deploy the same commit to Preview. Verify the Preview deployment URL uses HTTPS and test:
+
+1. `/api/v1/health` returns 200 and `/api/v1/ready` returns 200.
+2. Analyze one public repository; verify the response has the expected engine version, coverage, data-completeness details, and classification. Retrieve that report and verify its repository history.
+3. Restart or redeploy the Preview API and retrieve the report again to confirm database persistence.
+4. Send distinct invalid public repository requests until the configured per-minute limit is reached; verify the response is 429 with `Retry-After`. Keep request count low and never target Production.
+5. Test database outage handling only by temporarily removing or invalidating the staging database connection in the isolated Preview environment, then restore the correct secret and redeploy. `/health` may remain 200 while `/ready` must fail safely; analysis must not expose credentials or stack traces.
+6. Create a disposable Neon point-in-time restore branch from the staging branch, verify the test report and Alembic revision, then remove the restore branch.
+7. Deploy the previous application revision to the same isolated Preview database only after confirming schema compatibility; verify report retrieval, then restore the tested release commit.
+
+Record the Preview deployment URL, commit SHA, Neon branch ID, migration revision, TLS result, limiter outcome, failure behavior, restore counts, and rollback result in `release-validation.md`. Remove the Neon staging and restore branches, branch-specific Vercel variables, and temporary Git branch when finished. Do not delete production variables, branches, or data.
+
+The existing shared Neon project may block changing automatic-suspension settings. Keep staging in its separate Free project and use the plan default; do not work around a disabled default by creating an always-running compute or modifying production settings. Keep the staging project's region and endpoint identifier in the release record, but never record its connection string.
