@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const dimensions = [
   { name: "Maintenance", weight: "30%", indicators: [["Age of open reviewable pull requests", "45%"], ["Issues without comments after 30 days", "25%"], ["Time since the latest push", "30%"]] },
-  { name: "Community", weight: "25%", indicators: [["Not currently scored", "—"]] },
+  { name: "Community", weight: "25%", indicators: [["Issues with a repository-associated reply", "70%"], ["Response time", "30%"]] },
   { name: "Development", weight: "20%", indicators: [["Automated workflows", "⅓"], ["Test files", "⅓"], ["Development setup files", "⅓"]] },
   { name: "Documentation", weight: "15%", indicators: [["README", "30%"], ["License", "25%"], ["Contribution guide", "25%"], ["Documentation folder", "20%"]] },
   { name: "Sustainability", weight: "10%", indicators: [["Recent commit activity vs prior period", "65%"], ["Age of latest published release", "35%"]] },
@@ -26,7 +26,7 @@ export default function MethodologyPage() {
       <section className="method-callout">
         <span className="section-label">THE CORE RULE</span>
         <h2>Unknown is not zero.</h2>
-        <p>When GitHub data is incomplete, OSS Pulse excludes affected dimensions from the weighted score and reduces coverage. Scores below 75% coverage are labeled <b>Insufficient Data</b>, and the web app withholds the total score. A classification requires complete data for all four currently scoreable dimensions; Community remains unscored. The API retains the weighted value for diagnostic use.</p>
+        <p>When GitHub data is incomplete, OSS Pulse excludes affected dimensions from the weighted score and reduces coverage. Scores below 75% coverage are labeled <b>Insufficient Data</b>, and the web app withholds the total score. Community is scored only when the response sample is complete and there are open issues to evaluate; otherwise it is excluded and reported as unavailable. The API retains the weighted value for diagnostic use when it falls below the threshold.</p>
       </section>
 
       <section className="method-section">
@@ -42,17 +42,17 @@ export default function MethodologyPage() {
       </section>
 
       <section className="method-section">
-        <div className="method-section-heading"><span className="section-label">03 · ENGINE v0.3.3-ALPHA</span><h2>Current signals and limits</h2></div>
+        <div className="method-section-heading"><span className="section-label">03 · ENGINE v0.4.0-ALPHA</span><h2>Current signals and limits</h2></div>
         <div className="method-limits">
-          <article><h3>Maintenance</h3><p>Uses the median age of eligible open pull requests (45%), the share of open issues with no comments after 30 days (25%), and time since the latest push (30%). Empty issue or pull request queues receive the current formula&apos;s full score for those factors; each report explains when this applies. A separate sample checks up to five open issues for their first comment by a GitHub OWNER, MEMBER, or COLLABORATOR. This association is only a proxy for project involvement, not proof of maintainer status; the response sample is descriptive and is excluded from scoring. Draft pull requests and pull requests explicitly labeled as blocked or awaiting the author are excluded from stale pull request findings. No comments do not prove that a maintainer has not seen an issue.</p></article>
-          <article><h3>Community</h3><p>Not currently scored. Public API data cannot reliably identify every maintainer or distinguish maintainers from external contributors. Reports show attributed active commit authors as a descriptive count instead.</p></article>
+          <article><h3>Maintenance</h3><p>Uses the median age of eligible open pull requests (45%), the share of open issues with no comments after 30 days (25%), and time since the latest push (30%). Empty issue or pull request queues receive the current formula&apos;s full score for those factors; each report explains when this applies. Draft pull requests and pull requests explicitly labeled as blocked or awaiting the author are excluded from stale pull request findings. No comments do not prove that a maintainer has not seen an issue.</p></article>
+          <article><h3>Community</h3><p>Uses a complete sample of open issues to measure the share receiving a reply from a GitHub OWNER, MEMBER, or COLLABORATOR (70%) and how quickly those replies arrive (30%; full marks at one day or less, zero at 30 days or more). A repository-associated account is only a proxy for project involvement, not proof of maintainer status. Community is left unevaluated when the sample is partial or there are no open issues. The bounded sample size is configurable; small projects can therefore be easier to fully evaluate.</p></article>
           <article><h3>Development and documentation</h3><p>Development checks for automated workflows, test files, and setup files. Documentation checks for a README, license, contribution guide, and documentation folder using the weights above. Root README, license, contributor guide, and setup signals must be at the repository root; test and documentation directories can be nested in monorepos. Finding a test file does not mean tests pass or that coverage is high. File presence does not measure documentation quality.</p></article>
           <article><h3>Sustainability</h3><p>Compares commits in two complete 90-day windows and uses complete published-release history. If both activity windows contain zero commits, or complete release history contains no published releases, the corresponding signal scores zero. Incomplete history is left unevaluated. A decline finding needs at least four commits in the previous window and a drop of 50% or more. Activity counts, trends, and attributed GitHub author counts are descriptive and are shown only when the relevant data is complete. Release cadence varies by project; no single quiet period proves abandonment.</p></article>
         </div>
-        <p className="method-note">Reports include a plain-language explanation for each factor. GitHub pagination and tree-size limits may reduce data completeness. Each report records completeness by source. The 75% minimum requires all currently scoreable dimensions to be evaluated; partial weighted values remain diagnostic only. Reports also retain the engine version so a future methodology change does not silently rewrite past results.</p>
+        <p className="method-note">Reports include a plain-language explanation for each factor. GitHub pagination and tree-size limits may reduce data completeness. Each report records completeness by source. The 75% minimum allows a classification when enough dimensions have complete evidence; unavailable dimensions are shown in the report. Partial weighted values below the threshold remain diagnostic only. Reports also retain the engine version so a future methodology change does not silently rewrite past results.</p>
       </section>
 
-      <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Methodology version 0.3.3-alpha</span><span>Evidence over assumptions</span></footer>
+      <footer><Link className="brand" href="/"><span className="brand-mark">◉</span> OSS PULSE</Link><span>Methodology version 0.4.0-alpha</span><span>Evidence over assumptions</span></footer>
     </main>
   );
 }

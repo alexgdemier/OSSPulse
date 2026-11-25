@@ -4,6 +4,13 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ## [Unreleased]
 
+### Community scoring
+
+- Score the share and response speed of repository-associated replies to open issues when the bounded response sample is complete.
+- Keep Community unevaluated when the sample is incomplete or there are no open issues; association labels remain a proxy for project involvement, not verified maintainer identity.
+- Keep the 75% minimum coverage threshold; Community contributes its 25% weight when its issue-response sample is complete.
+- Increment the report engine and API/web package versions to `0.4.0-alpha`.
+
 ### Release hardening
 
 - Add a Python runtime dependency audit to continuous integration.
@@ -33,7 +40,7 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 ### Scoring coverage and versioning
 
-- Require 75% coverage before assigning a Health Score classification; this corresponds to complete data for every currently scoreable dimension while Community remains unscored.
+- Require 75% coverage before assigning a Health Score classification; at the time this change shipped, only four dimensions were scoreable and Community was unevaluated.
 - Keep weighted scores below the threshold as API diagnostics and withhold them in the web report and history.
 - Increment the API, web, and scoring engine versions to `0.3.0-alpha` so cached analyses use the revised methodology.
 
@@ -41,7 +48,7 @@ All notable changes to OSS Pulse are recorded here. The project is still in alph
 
 - Add a bounded sample of issue replies that GitHub associates with an owner, organization member, or collaborator.
 - Show sample size, observed response count, median response time, and whether all fetched open issues were covered.
-- Keep response evidence descriptive and outside the Health Score because GitHub association does not verify maintainer status.
+- At the time, keep response evidence descriptive and outside the Health Score because GitHub association does not verify maintainer status; Community scoring was added in `0.4.0-alpha`.
 - Increment the scoring and report engine version to `0.2.3-alpha`.
 
 ### Public service protection

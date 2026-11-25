@@ -16,7 +16,7 @@ Base path: `/api/v1`. Analysis, report retrieval, repository history, findings, 
 | GET | `/repositories/{owner}/{repo}/findings` | Findings from the latest report |
 | GET | `/repositories/{owner}/{repo}/insights` | Recommendations from the latest report |
 
-`POST /analyze` accepts `{ "repository_url": "https://github.com/owner/repo" }` and returns the complete JSON report. It does not require authentication for public repositories. Reports are persisted in PostgreSQL and can be retrieved by ID after service restarts. If coverage is below 75%, classification is `Insufficient Data`. The threshold requires complete evidence for all four currently scoreable dimensions; Community remains unevaluated.
+`POST /analyze` accepts `{ "repository_url": "https://github.com/owner/repo" }` and returns the complete JSON report. It does not require authentication for public repositories. Reports are persisted in PostgreSQL and can be retrieved by ID after service restarts. If coverage is below 75%, classification is `Insufficient Data`. Community contributes its 25% weight when its issue-response sample is complete and at least one open issue is available; otherwise it is listed as unavailable and excluded from coverage.
 
 `health_score` remains the weighted value of evaluable dimensions for API consumers, even below 75% coverage. In that case it is diagnostic only: the web report and report history hide the total and show `Insufficient Data` so a partial score is not mistaken for a reliable rating.
 

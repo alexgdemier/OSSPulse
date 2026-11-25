@@ -44,7 +44,7 @@ Six public repositories were analyzed with the `0.2.3-alpha` engine using authen
 ### Findings
 
 - The 50% coverage rule correctly classified five of six results as `Insufficient Data`, including a large repository whose available dimensions produced an API diagnostic value of 100. The web interface previously displayed that number prominently despite the insufficient-data classification; it now withholds totals below 50% coverage while retaining the raw API value for diagnostics.
-- `pallets/click` had complete source data for the four currently scoreable dimensions and received a 91 score at 75% coverage. Community remains unevaluated, which accounts for the missing 25 percentage points.
+- Under engine `0.3.3-alpha`, `pallets/click` had complete source data for the four scoreable dimensions and received a 91 score at 75% coverage. Community was unevaluated in that engine, accounting for the missing 25 percentage points.
 - The active fork was recognized as a fork and analyzed normally. The archived repository produced the archive finding and zero activity signals from complete commit history.
 - The tiny `octocat/Hello-World` repository has more than 7,500 open issues despite its one-kilobyte GitHub size. The three-page issue cap means its issue-derived signals correctly remain incomplete. Repeated stale issue and pull-request signals are now grouped in the web report while preserving each item's explanation and source link. False-positive review remains a release gate.
 - All six issue-response samples were marked incomplete. The issue data was either paginated beyond the current cap or the full open-issue set exceeded the five-item sample. This is expected under the current conservative completeness rule; these response metrics remain descriptive and do not affect scores.
@@ -52,7 +52,7 @@ Six public repositories were analyzed with the `0.2.3-alpha` engine using authen
 
 ## 2026-11-23 coverage-threshold follow-up
 
-Three additional active public repositories were analyzed with the `0.3.0-alpha` engine using authenticated, read-only GitHub API access. No reports were saved and no repositories were modified. The new minimum coverage is 75%, equal to the full weight of all four currently scoreable dimensions; Community remains unscored. Weighted scores below that threshold remain in API output for diagnostics, but classification and the web UI report `Insufficient Data`.
+Three additional active public repositories were analyzed with the `0.3.0-alpha` engine using authenticated, read-only GitHub API access. No reports were saved and no repositories were modified. At that time, the 75% minimum equaled the full weight of all four scoreable dimensions; Community was not yet scored. Weighted scores below that threshold remained in API output for diagnostics, but classification and the web UI reported `Insufficient Data`.
 
 | Repository | API score | Coverage | Classification | Issues | Commits | Releases | Tree |
 |---|---:|---:|---|---|---|---|---|

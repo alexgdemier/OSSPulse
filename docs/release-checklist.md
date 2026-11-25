@@ -12,7 +12,7 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [x] Record the current score-band distribution and retain provisional thresholds until independent reference labels are available.
 - [x] Lower age-only issue and pull-request severities because GitHub metadata does not prove software impact.
 - [x] Group repetitive stale-issue and stale-pull-request findings in the web report while keeping each finding and source link accessible.
-- [ ] Review every scoring signal and threshold against observed cases. Keep Community unscored until maintainer identity can be measured reliably.
+- [ ] Review every scoring signal and threshold against observed cases, including Community's bounded issue-response sample and association proxy.
 - [x] Confirm CI passes Python lint and formatting, backend tests, PostgreSQL migrations and schema checks, web lint, TypeScript, production build, dependency audit, and recovery drill (main commit `4a3c9e6`, 2026-11-25).
 - [x] Require npm audit in CI and enable GitHub Dependabot security alerts and automated security fixes.
 - [x] Run a Python runtime dependency audit locally; `pip-audit` found no known vulnerabilities.
@@ -35,14 +35,15 @@ OSS Pulse remains an alpha until the release gates below are satisfied. A green 
 - [ ] Exercise alert generation and confirm delivery to an operator; no Slack or webhook destination is currently linked.
 - [x] Add a voluntary maintainer calibration issue form with public-role evidence and consent language; no reviews have been received or marked confirmed.
 - [x] Enable Dependabot alerts and automated security fixes; verify secret scanning and push protection; confirm clean `npm audit` in CI.
-- [x] Align Python, API, scoring engine, and web versions at `0.3.3-alpha`; update release notes and the changelog.
+- [x] Align Python, API, scoring engine, and web versions at `0.4.0-alpha`; update release notes and the changelog.
+- [x] Score Community from complete issue-response samples, leave incomplete or empty samples unevaluated, preserve the 75% minimum coverage threshold, and explain the proxy limits in the report and methodology.
 - [x] Explain each score with its measured inputs and weights, warn when incomplete data limits the findings list, and add report-sharing details for maintainer review.
 - [x] Add a repeatable read-only repository matrix and recheck tiny, small active, low-churn, archived, very large, and monorepo examples with the current engine.
 - [ ] Tag the validated commit and publish installation, deployment, and support instructions.
 
 ## Current release status
 
-The project remains at `0.3.3-alpha`. A current-engine matrix covers tiny, small active, low-churn, archived, very large, and monorepo cases. Four of six results had incomplete sources and were left unclassified; the two complete cases produced `Excellent` and `At Risk`, but neither is a maintainer reference label. Reports now explain factor values and weights, warn when incomplete issue data limits findings, and provide a shareable review summary. No score band has an independent maintainer-confirmed reference tier, so all bands remain provisional. Hosted operations passed TLS, health/readiness, analysis quota, WAF edge limiting, database failure/recovery, point-in-time restore, autosuspend/cold-resume, cross-deployment persistence, and prior-commit rollback in isolated staging. Automated tests cover GitHub 403/429 behavior; a live hosted rate-limit exercise and alert-delivery drill remain open. Do not call the scoring stable until calibration and the remaining operational checks are satisfied.
+The project is at `0.4.0-alpha`. A current-engine matrix covers tiny, small active, low-churn, archived, very large, and monorepo cases; its scores were produced by earlier scoring versions and are not validation of the Community signal. The two complete cases produced `Excellent` and `At Risk`, but neither is a maintainer reference label. Reports explain factor values and weights, warn when incomplete issue data limits findings, and provide a shareable review summary. No score band has an independent maintainer-confirmed reference tier, so all bands remain provisional. Community scoring is implemented, but its bounded sample and GitHub association proxy still need validation across diverse repositories. Hosted operations passed TLS, health/readiness, analysis quota, WAF edge limiting, database failure/recovery, point-in-time restore, autosuspend/cold-resume, cross-deployment persistence, and prior-commit rollback in isolated staging. Automated tests cover GitHub 403/429 behavior; a live hosted rate-limit exercise and alert-delivery drill remain open. Do not call the scoring stable until calibration and the remaining operational checks are satisfied.
 
 ## Tooling follow-up
 
